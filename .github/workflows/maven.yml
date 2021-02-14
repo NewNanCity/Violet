@@ -32,6 +32,9 @@ jobs:
         
     - name: Build with Maven
       run: mvn clean && mvn -B package --file pom.xml
+    
+    - name: Set Release version env variable
+      run: echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
       
     - name: Save Maven cache
       uses: skjolber/maven-cache-github-action@v1
@@ -43,6 +46,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/NewNanKits-*.jar
-        tag: ${{ github.ref }}
-        overwrite: false
+        tag: ${{ env.RELEASE_VERSION }}
+        overwrite: true
         file_glob: true
