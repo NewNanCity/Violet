@@ -31,7 +31,7 @@ jobs:
         step: restore
         
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn clean && mvn -B package --file pom.xml
       
     - name: Save Maven cache
       uses: skjolber/maven-cache-github-action@v1
@@ -42,7 +42,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: target/NewNanKits*
+        file: target/NewNanKits-*.jar
         tag: ${{ github.ref }}
         overwrite: true
         file_glob: true
