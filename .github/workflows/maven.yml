@@ -44,5 +44,5 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/NewNanKits-*.jar
         tag: ${{ github.ref }}
-        overwrite: true
+        overwrite: false
         file_glob: true
