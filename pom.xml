@@ -104,7 +104,7 @@
             </plugin>
         </plugins>
 
-        <finalName>NewNanKits</finalName>
+        <finalName>NewNanKits-${project.version}</finalName>
         <resources>
             <resource>
                 <filtering>true</filtering>
