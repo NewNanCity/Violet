@@ -106,7 +106,7 @@ public class MessageManager implements Terminable {
 
     }
 
-    public abstract static class LanguageProvider {
-        abstract public String provideLanguage(String rawText);
+    public interface LanguageProvider {
+        String provideLanguage(String rawText);
     }
 }
