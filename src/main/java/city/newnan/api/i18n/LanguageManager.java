@@ -58,12 +58,20 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
         return this;
     }
 
+    public Language getMajorLanguage() {
+        return majorLanguage;
+    }
+
     public LanguageManager setFallbackLanguage(Locale locale) {
         Language language = languageMap.get(locale);
         if (language != null) {
             fallbackLanguage = language;
         }
         return this;
+    }
+
+    public Language getFallbackLanguage() {
+        return fallbackLanguage;
     }
 
     public LanguageManager reloadAll() {

@@ -60,6 +60,27 @@ public class MessageManager implements Terminable {
         return this;
     }
 
+    public String sprintf(boolean provider, boolean color, String formatText, Object ...params) {
+        // 语言映射处理
+        if (provider && languageProvider != null) {
+            formatText = languageProvider.provideLanguage(formatText);
+        }
+        // 数据格式化
+        formatText = MessageFormat.format(formatText, params);
+        if (color) {
+            formatText = ChatColor.translateAlternateColorCodes('&', formatText);
+        }
+        return formatText;
+    }
+
+    public String sprintf(boolean provider, String formatText, Object ...params) {
+        return sprintf(provider, true, formatText, params);
+    }
+
+    public String sprintf(String formatText, Object ...params) {
+        return sprintf(true, true, formatText, params);
+    }
+
     public MessageManager printf(CommandSender sendTo, boolean prefix, boolean provider, String formatText, Object ...params) {
         // 语言映射处理
         if (provider && languageProvider != null) {
