@@ -6,7 +6,7 @@
 
     <groupId>city.newnan</groupId>
     <artifactId>NewNanKits</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <name>NewNanKits</name>
     <url>https://www.newnan.city</url>
@@ -31,13 +31,6 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <!--https://hub.spigotmc.org/nexus/#welcome-->
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
             <version>1.14.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>

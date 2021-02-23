@@ -29,12 +29,6 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
         if (file.exists() || file.isFile()) {
             Language language = new Language(file, locale);
             languageMap.put(locale, language);
-            if (majorLanguage == null) {
-                majorLanguage = language;
-            }
-            else if (fallbackLanguage == null) {
-                fallbackLanguage = language;
-            }
         } else {
             throw new FileNotFoundException(filePath);
         }
@@ -85,7 +79,7 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
         return this;
     }
 
-    private static final Pattern pattern = Pattern.compile("[$]([^$]+?)[$]");
+    private static final Pattern pattern = Pattern.compile("[$][^$]+[$]");
 
     @Override
     public String provideLanguage(String rawText) {

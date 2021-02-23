@@ -25,7 +25,7 @@ public class Language {
     public Locale getLanguage() {return language;}
 
     public void reload() throws IOException, ConfigManager.UnknownConfigFileFormatException {
-        String[] splits = ".".split(languageFile.getPath());
+        String[] splits = languageFile.getPath().split("\\.");
         switch (splits[splits.length - 1].toUpperCase()) {
             case "YML":
             case "YAML":
@@ -45,7 +45,7 @@ public class Language {
     public String getNodeString(String path) {
         String str = pathCache.get(path);
         if (str == null) {
-            str = languageRoot.getNode((Object) ".".split(path)).getString();
+            str = languageRoot.getNode((Object[]) path.split("\\.")).getString();
             pathCache.put(path, str);
         }
         return str;

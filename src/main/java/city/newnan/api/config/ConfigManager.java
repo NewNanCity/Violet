@@ -175,7 +175,7 @@ public class ConfigManager implements Terminable {
     }
 
     protected static ConfigFileType getType(String filePath) {
-        String[] splits = ".".split(filePath);
+        String[] splits = filePath.split("\\.");
         switch (splits[splits.length - 1].toUpperCase()) {
             case "YML":
             case "YAML":
