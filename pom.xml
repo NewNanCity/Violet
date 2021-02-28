@@ -6,7 +6,7 @@
 
     <groupId>city.newnan</groupId>
     <artifactId>NewNanKits</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>jar</packaging>
     <name>NewNanKits</name>
     <url>https://www.newnan.city</url>
