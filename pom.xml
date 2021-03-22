@@ -4,12 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>city.newnan</groupId>
-    <artifactId>NewNanKits</artifactId>
+    <groupId>io.github.gk0wk</groupId>
+    <artifactId>Violet</artifactId>
     <version>1.0.3</version>
     <packaging>jar</packaging>
-    <name>NewNanKits</name>
-    <url>https://www.newnan.city</url>
+    <name>Violet</name>
+    <url>https://gk0wk.github.io/</url>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -97,7 +97,7 @@
             </plugin>
         </plugins>
 
-        <finalName>NewNanKits-${project.version}</finalName>
+        <finalName>${project.name}-${project.version}</finalName>
         <resources>
             <resource>
                 <filtering>true</filtering>
