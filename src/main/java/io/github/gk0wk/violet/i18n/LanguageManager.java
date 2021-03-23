@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class LanguageManager implements MessageManager.LanguageProvider, Terminable {
 
     private Language majorLanguage;
-    private Language fallbackLanguage;
+    private Language defaultLanguage;
     private final Map<Locale, Language> languageMap = new HashMap<>();
     private final Plugin plugin;
 
@@ -56,16 +56,16 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
         return majorLanguage;
     }
 
-    public LanguageManager setFallbackLanguage(Locale locale) {
+    public LanguageManager setDefaultLanguage(Locale locale) {
         Language language = languageMap.get(locale);
         if (language != null) {
-            fallbackLanguage = language;
+            defaultLanguage = language;
         }
         return this;
     }
 
-    public Language getFallbackLanguage() {
-        return fallbackLanguage;
+    public Language getDefaultLanguage() {
+        return defaultLanguage;
     }
 
     public LanguageManager reloadAll() {
@@ -89,7 +89,7 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
             String path = key.replace("$", "");
             String replaced;
             if (majorLanguage == null || (replaced = majorLanguage.getNodeString(path)) == null) {
-                if (fallbackLanguage == null || (replaced = fallbackLanguage.getNodeString(path)) == null)
+                if (defaultLanguage == null || (replaced = defaultLanguage.getNodeString(path)) == null)
                     continue;
             }
             rawText = rawText.replace(key, replaced);
