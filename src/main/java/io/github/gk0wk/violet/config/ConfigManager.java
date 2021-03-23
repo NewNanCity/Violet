@@ -1,4 +1,4 @@
-package city.newnan.api.config;
+package io.github.gk0wk.violet.config;
 
 import me.lucko.helper.Schedulers;
 import me.lucko.helper.config.ConfigFactory;

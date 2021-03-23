@@ -1,4 +1,4 @@
-package city.newnan.api.message;
+package io.github.gk0wk.violet.message;
 
 import me.lucko.helper.terminable.Terminable;
 import org.bukkit.Bukkit;

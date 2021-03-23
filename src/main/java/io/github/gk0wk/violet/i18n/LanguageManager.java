@@ -1,7 +1,7 @@
-package city.newnan.api.i18n;
+package io.github.gk0wk.violet.i18n;
 
-import city.newnan.api.config.ConfigManager;
-import city.newnan.api.message.MessageManager;
+import io.github.gk0wk.violet.config.ConfigManager;
+import io.github.gk0wk.violet.message.MessageManager;
 import me.lucko.helper.terminable.Terminable;
 import org.bukkit.plugin.Plugin;
 

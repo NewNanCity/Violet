@@ -1,6 +1,6 @@
-package city.newnan.api.i18n;
+package io.github.gk0wk.violet.i18n;
 
-import city.newnan.api.config.ConfigManager;
+import io.github.gk0wk.violet.config.ConfigManager;
 import me.lucko.helper.config.ConfigFactory;
 import me.lucko.helper.config.ConfigurationNode;
 
