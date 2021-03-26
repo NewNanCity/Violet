@@ -49,6 +49,6 @@ Add the dependency:
 
 ```
     dependencies {
-        implementation 'com.github.NewNanCity:Violet:1.0.4'
+        implementation 'com.github.NewNanCity:Violet:VERSION'
     }
 ```
