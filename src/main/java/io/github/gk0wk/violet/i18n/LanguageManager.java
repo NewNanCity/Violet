@@ -1,7 +1,7 @@
 package io.github.gk0wk.violet.i18n;
 
 import io.github.gk0wk.violet.config.ConfigManager;
-import io.github.gk0wk.violet.message.MessageManager;
+import io.github.gk0wk.violet.message.LanguageProvider;
 import me.lucko.helper.terminable.Terminable;
 import org.bukkit.plugin.Plugin;
 
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LanguageManager implements MessageManager.LanguageProvider, Terminable {
+public class LanguageManager implements LanguageProvider, Terminable {
 
     private Language majorLanguage;
     private Language defaultLanguage;
@@ -54,6 +54,13 @@ public class LanguageManager implements MessageManager.LanguageProvider, Termina
 
     public Language getMajorLanguage() {
         return majorLanguage;
+    }
+
+    public void guessMajorLanguage() {
+        Locale locale = Locale.getDefault();
+        if (languageMap.containsKey(locale)) {
+            setMajorLanguage(locale);
+        }
     }
 
     public LanguageManager setDefaultLanguage(Locale locale) {

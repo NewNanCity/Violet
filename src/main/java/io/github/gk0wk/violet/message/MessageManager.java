@@ -127,7 +127,4 @@ public class MessageManager implements Terminable {
 
     }
 
-    public interface LanguageProvider {
-        String provideLanguage(String rawText);
-    }
 }
