@@ -6,7 +6,7 @@
 
     <groupId>io.github.gk0wk</groupId>
     <artifactId>Violet</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
     <name>Violet</name>
     <url>https://gk0wk.github.io/</url>
@@ -50,6 +50,11 @@
             <groupId>me.lucko</groupId>
             <artifactId>helper</artifactId>
             <version>5.6.5</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.25</version>
         </dependency>
     </dependencies>
 
