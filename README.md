@@ -8,6 +8,8 @@ Useful toolkits java library for Bukkit Server Plugin.
 - [x] MessageManager (i18n Supported)
 - [x] LanguageManager
 - [x] CommandManager (Deprecated, and recommend to use [aikar's commands](https://github.com/aikar/commands))
+- [x] DatabaseManager (Now just MySQL)
+- [x] NetworkManager (Based on okHttp4)
 
 ## How to add Violet to your project
 

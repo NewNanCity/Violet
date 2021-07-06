@@ -6,7 +6,7 @@
 
     <groupId>io.github.gk0wk</groupId>
     <artifactId>Violet</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <packaging>jar</packaging>
     <name>Violet</name>
     <url>https://gk0wk.github.io/</url>
@@ -55,6 +55,11 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.25</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.0</version>
         </dependency>
     </dependencies>
 
