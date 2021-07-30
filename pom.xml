@@ -7,9 +7,35 @@
     <groupId>io.github.gk0wk</groupId>
     <artifactId>Violet</artifactId>
     <version>1.0.9</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>Violet</name>
     <url>https://gk0wk.github.io/</url>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Gk0Wk</name>
+            <email>nmg_wk@yeah.net</email>
+            <url>https://github.com/Gk0Wk</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/NewNanCity/Violet.git</connection>
+        <developerConnection>scm:git:git@github.com:NewNanCity/Violet.git</developerConnection>
+        <url>https://github.com/NewNanCity/Violet</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/NewNanCity/Violet</url>
+    </issueManagement>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
