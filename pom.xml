@@ -7,7 +7,7 @@
     <groupId>io.github.gk0wk</groupId>
     <artifactId>Violet</artifactId>
     <version>1.0.9</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>Violet</name>
     <url>https://gk0wk.github.io/</url>
 
