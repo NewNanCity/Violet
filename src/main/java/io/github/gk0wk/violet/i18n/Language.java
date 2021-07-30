@@ -3,7 +3,10 @@ package io.github.gk0wk.violet.i18n;
 import io.github.gk0wk.violet.config.ConfigManager;
 import me.lucko.helper.config.ConfigFactory;
 import me.lucko.helper.config.ConfigurationNode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,12 +19,14 @@ public class Language {
     private final Locale language;
     private final Map<String, String> pathCache = new HashMap<>();
 
-    public Language(File languageFile, Locale language) throws IOException, ConfigManager.UnknownConfigFileFormatException {
+    public Language(@NotNull File languageFile, @NotNull Locale language)
+            throws IOException, ConfigManager.UnknownConfigFileFormatException {
         this.languageFile = languageFile;
         this.language = language;
         reload();
     }
 
+    @Nonnull
     public Locale getLanguage() {return language;}
 
     public void reload() throws IOException, ConfigManager.UnknownConfigFileFormatException {
@@ -42,7 +47,8 @@ public class Language {
         }
     }
 
-    public String getNodeString(String path) {
+    @Nullable
+    public String getNodeString(@NotNull String path) {
         String str = pathCache.get(path);
         if (str == null) {
             str = languageRoot.getNode((Object[]) path.split("\\.")).getString();

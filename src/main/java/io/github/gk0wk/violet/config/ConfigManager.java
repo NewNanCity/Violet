@@ -6,7 +6,9 @@ import me.lucko.helper.config.ConfigurationNode;
 import me.lucko.helper.scheduler.Task;
 import me.lucko.helper.terminable.Terminable;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.*;
 import java.util.*;
 
@@ -39,7 +41,7 @@ public class ConfigManager implements Terminable {
      * 构造函数
      * @param plugin 要绑定的插件
      */
-    public ConfigManager(Plugin plugin) {
+    public ConfigManager(@NotNull Plugin plugin) {
         this.plugin = plugin;
     }
 
@@ -47,6 +49,7 @@ public class ConfigManager implements Terminable {
      * 启动周期性的配置缓存清理
      * @return ConfigManager实例
      */
+    @Nonnull
     public ConfigManager startCleanService() {
         if (cleanTask == null) {
             // 自动卸载长时间未使用的配置文件
@@ -74,6 +77,7 @@ public class ConfigManager implements Terminable {
      * 关闭周期性的配置缓存清理
      * @return ConfigManager实例
      */
+    @Nonnull
     public ConfigManager stopCleanService() {
         if (cleanTask != null) {
             cleanTask.close();
@@ -86,7 +90,7 @@ public class ConfigManager implements Terminable {
      * @param configFile 配置文件路径
      * @return 如果文件之前存在就返回true，如果现在新创建就返回false
      */
-    public boolean touch(String configFile) {
+    public boolean touch(@NotNull String configFile) {
         // 不存在就创建
         if (!new File(plugin.getDataFolder(), configFile).exists()) {
             try {
@@ -107,7 +111,7 @@ public class ConfigManager implements Terminable {
      * @return 如果文件之前存在就返回true，如果现在新创建就返回false
      * @throws IOException 文件读写出错
      */
-    public boolean touchOrCopyTemplate(String targetFile, String templateFile) throws IOException {
+    public boolean touchOrCopyTemplate(@NotNull String targetFile, @NotNull String templateFile) throws IOException {
         File file = new File(plugin.getDataFolder(), targetFile);
         // 如果文件不存在
         if (!file.exists()) {
@@ -141,7 +145,8 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode get(String configFile) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode get(@NotNull String configFile) throws IOException, UnknownConfigFileFormatException {
         // 已缓存则返回
         if (this.configMap.containsKey(configFile))
             return this.configMap.get(configFile);
@@ -174,7 +179,8 @@ public class ConfigManager implements Terminable {
         return config;
     }
 
-    protected static ConfigFileType getType(String filePath) {
+    @Nonnull
+    protected static ConfigFileType getType(@NotNull String filePath) {
         String[] splits = filePath.split("\\.");
         switch (splits[splits.length - 1].toUpperCase()) {
             case "YML":
@@ -198,7 +204,9 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode getOrCopyTemplate(String targetFile, String templateFile) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode getOrCopyTemplate(@NotNull String targetFile, @NotNull String templateFile)
+            throws IOException, UnknownConfigFileFormatException {
         // 已缓存则返回
         if (this.configMap.containsKey(targetFile))
             return this.configMap.get(targetFile);
@@ -216,7 +224,9 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    protected ConfigurationNode saveOrUnload(String configFile, boolean unload, boolean save) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    protected ConfigurationNode saveOrUnload(@NotNull String configFile, boolean unload, boolean save)
+            throws IOException, UnknownConfigFileFormatException {
         ConfigurationNode config;
         if (unload) {
             config = this.configMap.remove(configFile);
@@ -258,7 +268,8 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode save(String configFile) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode save(@NotNull String configFile) throws IOException, UnknownConfigFileFormatException {
         return saveOrUnload(configFile, false, true);
     }
 
@@ -269,7 +280,9 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode unload(String configFile, boolean save) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode unload(@NotNull String configFile, boolean save)
+            throws IOException, UnknownConfigFileFormatException {
         return saveOrUnload(configFile, true, save);
     }
 
@@ -280,7 +293,8 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      *  @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode reload(String configFile) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode reload(@NotNull String configFile) throws IOException, UnknownConfigFileFormatException {
         unload(configFile, false);
         return get(configFile);
     }
@@ -292,7 +306,8 @@ public class ConfigManager implements Terminable {
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
-    public ConfigurationNode reset(String configFile) throws IOException, UnknownConfigFileFormatException {
+    @Nonnull
+    public ConfigurationNode reset(@NotNull String configFile) throws IOException, UnknownConfigFileFormatException {
         plugin.saveResource(configFile, true);
         return reload(configFile);
     }
@@ -314,7 +329,7 @@ public class ConfigManager implements Terminable {
      * 将某个文件设置为持久化保存的，即不会因为长久未访问就从内存中卸载
      * @param configFile 要持久化保存的配置文件路径
      */
-    public void setPersistent(String configFile) {
+    public void setPersistent(@NotNull String configFile) {
         persistentConfigSet.add(configFile);
     }
 
@@ -322,7 +337,7 @@ public class ConfigManager implements Terminable {
      * 取消持久化保存
      * @param configFile 要取消持久化保存的配置文件路径
      */
-    public void unsetPersistent(String configFile) {
+    public void unsetPersistent(@NotNull String configFile) {
         persistentConfigSet.remove(configFile);
     }
 
@@ -339,7 +354,7 @@ public class ConfigManager implements Terminable {
      * 未知的配置文件格式异常
      */
     public static class UnknownConfigFileFormatException extends Exception {
-        public UnknownConfigFileFormatException(String fileName) {
+        public UnknownConfigFileFormatException(@NotNull String fileName) {
             super("Unknown Config File Format: " + fileName);
         }
     }

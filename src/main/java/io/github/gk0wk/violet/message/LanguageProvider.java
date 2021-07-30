@@ -1,5 +1,10 @@
 package io.github.gk0wk.violet.message;
 
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
+
 public interface LanguageProvider {
-    String provideLanguage(String rawText);
+    @Nonnull
+    String provideLanguage(@NotNull String rawText);
 }

@@ -1,13 +1,15 @@
 package io.github.gk0wk.violet.config;
 
 import me.lucko.helper.config.ConfigurationNode;
-import me.lucko.helper.config.ValueType;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 
 public class ConfigUtil {
-    public static ConfigurationNode setListIfNull(ConfigurationNode node) {
-        if (node != null && node.getValueType() == ValueType.NULL) {
+    @Nonnull
+    public static ConfigurationNode setListIfNull(@NotNull ConfigurationNode node) {
+        if (node.isEmpty() && !node.isList()) {
             node.setValue(new ArrayList<>());
         }
         return node;

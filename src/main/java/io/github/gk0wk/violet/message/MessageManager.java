@@ -6,7 +6,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.text.MessageFormat;
 
 public class MessageManager implements Terminable {
@@ -19,16 +22,18 @@ public class MessageManager implements Terminable {
 
     protected final String consolePrefixString;
 
-    public MessageManager(Plugin plugin) {
+    public MessageManager(@NotNull Plugin plugin) {
         this.consolePrefixString = "[" + plugin.getDescription().getName() + "] ";
     }
 
-    public MessageManager setPlayerPrefix(String prefix) {
+    @Nonnull
+    public MessageManager setPlayerPrefix(@NotNull String prefix) {
         this.playerPrefixString = prefix;
         return this;
     }
 
-    public MessageManager setLanguageProvider(LanguageProvider languageProvider) {
+    @Nonnull
+    public MessageManager setLanguageProvider(@NotNull LanguageProvider languageProvider) {
         this.languageProvider = languageProvider;
         return this;
     }
@@ -37,7 +42,8 @@ public class MessageManager implements Terminable {
      * 向控制台(其实是向JAVA日志)输出INFO日志
      * @param msg 要发送的消息
      */
-    public MessageManager info(String msg) {
+    @Nonnull
+    public MessageManager info(@NotNull String msg) {
         consoleLogger.info(consolePrefixString + msg);
         return this;
     }
@@ -46,7 +52,8 @@ public class MessageManager implements Terminable {
      * 向控制台(其实是向JAVA日志)输出WARN日志
      * @param msg 要发送的消息
      */
-    public MessageManager warn(String msg) {
+    @Nonnull
+    public MessageManager warn(@NotNull String msg) {
         consoleLogger.warning(consolePrefixString + msg);
         return this;
     }
@@ -55,12 +62,14 @@ public class MessageManager implements Terminable {
      * 向控制台(其实是向JAVA日志)输出ERROR日志
      * @param msg 要发送的消息
      */
-    public MessageManager error(String msg) {
+    @Nonnull
+    public MessageManager error(@NotNull String msg) {
         consoleLogger.severe(consolePrefixString + msg);
         return this;
     }
 
-    public String sprintf(boolean provider, boolean color, String formatText, Object ...params) {
+    @Nonnull
+    public String sprintf(boolean provider, boolean color, @NotNull String formatText, Object ...params) {
         // 语言映射处理
         if (provider && languageProvider != null) {
             formatText = languageProvider.provideLanguage(formatText);
@@ -73,15 +82,19 @@ public class MessageManager implements Terminable {
         return formatText;
     }
 
-    public String sprintf(boolean provider, String formatText, Object ...params) {
+    @Nonnull
+    public String sprintf(boolean provider, @NotNull String formatText, Object ...params) {
         return sprintf(provider, true, formatText, params);
     }
 
-    public String sprintf(String formatText, Object ...params) {
+    @Nonnull
+    public String sprintf(@NotNull String formatText, Object ...params) {
         return sprintf(true, true, formatText, params);
     }
 
-    public MessageManager printf(CommandSender sendTo, boolean prefix, boolean provider, String formatText, Object ...params) {
+    @Nonnull
+    public MessageManager printf(@Nullable CommandSender sendTo, boolean prefix,
+                                 boolean provider, @NotNull String formatText, Object ...params) {
         // 语言映射处理
         if (provider && languageProvider != null) {
             formatText = languageProvider.provideLanguage(formatText);
@@ -106,19 +119,23 @@ public class MessageManager implements Terminable {
         return this;
     }
 
-    public MessageManager printf(boolean prefix, boolean provider, String formatText, Object ...params) {
+    @Nonnull
+    public MessageManager printf(boolean prefix, boolean provider, @NotNull String formatText, Object ...params) {
         return printf(null, prefix, provider, formatText, params);
     }
 
-    public MessageManager printf(CommandSender sendTo, boolean prefix, String formatText, Object ...params) {
+    @Nonnull
+    public MessageManager printf(CommandSender sendTo, boolean prefix, @NotNull String formatText, Object ...params) {
         return printf(sendTo, prefix, true, formatText, params);
     }
 
-    public MessageManager printf(CommandSender sendTo, String formatText, Object ...params) {
+    @Nonnull
+    public MessageManager printf(CommandSender sendTo, @NotNull String formatText, Object ...params) {
         return printf(sendTo, true, true, formatText, params);
     }
 
-    public MessageManager printf(String formatText, Object ...params) {
+    @Nonnull
+    public MessageManager printf(@NotNull String formatText, Object ...params) {
         return printf(null, true, true, formatText, params);
     }
 
