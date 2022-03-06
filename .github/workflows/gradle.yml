@@ -37,6 +37,11 @@ jobs:
     - name: Get git version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      
+    - name: File test1
+      run: ls build
+    - name: File test2
+      run: ls build/libs
 
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # the publishing section of your build.gradle
