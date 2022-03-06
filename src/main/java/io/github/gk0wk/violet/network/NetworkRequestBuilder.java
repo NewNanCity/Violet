@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -68,25 +69,46 @@ public class NetworkRequestBuilder {
     }
 
     private BiConsumer<Call, BiConsumer<Response, Exception>> handlerType;
-    @Nonnull
-    public NetworkRequestBuilder sync() {
+    @Nonnull public NetworkRequestBuilder sync() {
         this.handlerType = syncHandler;
         return this;
     }
-    @Nonnull
-    public NetworkRequestBuilder async() {
+    @Nonnull public NetworkRequestBuilder async() {
         this.handlerType = asyncHandler;
         return this;
     }
 
-    @Nonnull
-    public NetworkRequestBuilder postJson(@NotNull JsonObject body) {
+    @Nonnull NetworkRequestBuilder url(String url) {
+        this.requestBuilder.url(url);
+        return this;
+    }
+
+    @Nonnull NetworkRequestBuilder url(URL url) {
+        this.requestBuilder.url(url);
+        return this;
+    }
+
+    @Nonnull NetworkRequestBuilder url(HttpUrl url) {
+        this.requestBuilder.url(url);
+        return this;
+    }
+
+    @Nonnull NetworkRequestBuilder get() {
+        this.requestBuilder.get();
+        return this;
+    }
+
+    @Nonnull NetworkRequestBuilder head() {
+        this.requestBuilder.head();
+        return this;
+    }
+
+    @Nonnull public NetworkRequestBuilder postJson(@NotNull JsonObject body) {
         this.requestBuilder.post(RequestBody.create(body.toString(), JSON_TYPE));
         return this;
     }
 
-    @Nonnull
-    public NetworkRequestBuilder postJson(@NotNull JsonArray body) {
+    @Nonnull public NetworkRequestBuilder postJson(@NotNull JsonArray body) {
         this.requestBuilder.post(RequestBody.create(body.toString(), JSON_TYPE));
         return this;
     }

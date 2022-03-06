@@ -29,7 +29,7 @@ public class SQLConnectionPool implements Terminable {
 
     @Nonnull
     public SQLConnectionPool dbType(@NotNull String dbType) {
-        this.dbType = dbType.toUpperCase(Locale.ROOT);
+        this.dbType = dbType.toLowerCase(Locale.ROOT);
         return this;
     }
     @Nonnull
@@ -72,10 +72,9 @@ public class SQLConnectionPool implements Terminable {
     // https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing
     private static final int MAXIMUM_POOL_SIZE = (Runtime.getRuntime().availableProcessors() * 2) + 1;
     private static final int MINIMUM_IDLE = Math.min(MAXIMUM_POOL_SIZE, 10);
-    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(30);
+    private static final long MAX_LIFETIME = TimeUnit.MINUTES.toMillis(10);
     private static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
     private static final long LEAK_DETECTION_THRESHOLD = TimeUnit.SECONDS.toMillis(10);
-    private static final long KEEP_ALIVE = TimeUnit.MINUTES.toMillis(60);
 
     private int maximumPoolSize = MAXIMUM_POOL_SIZE;
     @Nonnull
