@@ -34,6 +34,10 @@ jobs:
       with:
         arguments: build
 
+    - name: Get git version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # the publishing section of your build.gradle
     - name: Upload to Release
@@ -41,6 +45,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: build/libs/*.jar
-        tag: ${{ env.RELEASE_VERSION }}
+        tag: ${{ steps.get_version.outputs.VERSION }}
         overwrite: true
         file_glob: true
