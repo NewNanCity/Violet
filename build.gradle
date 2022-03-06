@@ -1,9 +1,11 @@
 plugins {
     id 'idea'
+    // For jitpack (https://docs.jitpack.io/building)
+    // https://developer.android.com/studio/build/maven-publish-plugin#groovy
+    id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm' version '1.6.10'
     // https://github.com/johnrengelman/shadow
     id 'com.github.johnrengelman.shadow' version '7.1.2'
-    id 'maven-publish'
 }
 
 group 'city.newnan'
@@ -70,4 +72,20 @@ compileTestKotlin {
 
 test {
     useJUnitPlatform()
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                // Applies the component for the release build variant.
+                from components.kotlin
+
+                // You can then customize attributes of the publication as shown below.
+                groupId = group
+                artifactId = "Violet"
+                version = version
+            }
+        }
+    }
 }
