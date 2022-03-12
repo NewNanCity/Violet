@@ -12,7 +12,7 @@ import java.util.function.Consumer
 
 
 fun String.getConfigFileType(): ConfigManager.ConfigFileType {
-    val splits = split("\\.").toTypedArray()
+    val splits = split(".").toTypedArray()
     when (splits.last().uppercase(Locale.getDefault())) {
         "YML", "YAML" -> return ConfigManager.ConfigFileType.YAML
         "JSON" -> return ConfigManager.ConfigFileType.JSON
