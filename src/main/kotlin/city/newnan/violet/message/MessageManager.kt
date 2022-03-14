@@ -1,6 +1,7 @@
 package city.newnan.violet.message
 
 import me.lucko.helper.terminable.Terminable
+import me.lucko.helper.terminable.TerminableConsumer
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
@@ -11,6 +12,8 @@ import java.text.MessageFormat
 private val consoleLogger = Bukkit.getLogger()
 
 class MessageManager(plugin: Plugin) : Terminable {
+    init { if (plugin is TerminableConsumer) bindWith(plugin) }
+
     private var languageProvider: LanguageProvider? = null
     protected var playerPrefixString = ""
     protected val consolePrefixString: String

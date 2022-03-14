@@ -3,6 +3,7 @@ package city.newnan.violet.i18n
 import city.newnan.violet.config.ConfigManager.UnknownConfigFileFormatException
 import city.newnan.violet.message.LanguageProvider
 import me.lucko.helper.terminable.Terminable
+import me.lucko.helper.terminable.TerminableConsumer
 import org.bukkit.plugin.Plugin
 import java.io.File
 import java.io.IOException
@@ -12,6 +13,8 @@ import java.util.regex.Pattern
 private val pattern = Pattern.compile("[$][^$]+[$]")
 
 class LanguageManager(private val plugin: Plugin) : LanguageProvider, Terminable {
+    init { if (plugin is TerminableConsumer) bindWith(plugin) }
+
     var majorLanguage: Language? = null
         private set
     var defaultLanguage: Language? = null

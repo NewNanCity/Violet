@@ -5,6 +5,7 @@ import me.lucko.helper.config.ConfigFactory
 import me.lucko.helper.config.ConfigurationNode
 import me.lucko.helper.scheduler.Task
 import me.lucko.helper.terminable.Terminable
+import me.lucko.helper.terminable.TerminableConsumer
 import org.bukkit.plugin.Plugin
 import java.io.*
 import java.util.*
@@ -58,7 +59,7 @@ fun File.saveConfigurationTree(config: ConfigurationNode): Unit = when (path.get
     }
 }
 
-open class ConfigManager
+class ConfigManager
 /**
  * 构造函数
  * @param plugin 要绑定的插件
@@ -68,6 +69,8 @@ open class ConfigManager
      */
     private val plugin: Plugin
 ) : Terminable {
+    init { if (plugin is TerminableConsumer) bindWith(plugin) }
+
     /**
      * 配置文件缓冲
      */
