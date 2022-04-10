@@ -15,17 +15,44 @@ class MessageManager(plugin: Plugin) : Terminable {
     init { if (plugin is TerminableConsumer) bindWith(plugin) }
 
     private var languageProvider: LanguageProvider? = null
-    protected var playerPrefixString = ""
-    protected val consolePrefixString: String
+    internal var playerPrefixString = ""
+    internal val consolePrefixString: String
+
+    /**
+     * 调试模式，默认为`false`
+     */
+    var debugMode: Boolean = false
 
     init {
         consolePrefixString = "[${plugin.description.name}] "
     }
 
+    /**
+     * 设置向玩家输出信息时的前缀
+     * @param prefix 前缀字符串
+     */
     infix fun setPlayerPrefix(prefix: String): MessageManager = this.also { playerPrefixString = prefix }
 
+    /**
+     * 设置多语言服务提供者
+     * @param languageProvider 多语言服务提供者，需实现`LanguageProvider`接口
+     */
     infix fun setLanguageProvider(languageProvider: LanguageProvider): MessageManager =
         this.also { this.languageProvider = languageProvider }
+
+    /**
+     * 向控制台(其实是向JAVA日志)输出调试日志，只有`debugMode`为`true`时才会输出
+     * @param msg 要发送的消息
+     */
+    infix fun debug(msg: String): MessageManager =
+        this.also { if (debugMode) consoleLogger.info("$consolePrefixString$msg") }
+
+    /**
+     * 向控制台(其实是向JAVA日志)输出调试日志，只有`debugMode`为`true`时才会输出
+     * @param msg 要发送的消息
+     */
+    infix fun debug(msg: (MessageManager) -> String) =
+        this.also { if (debugMode) consoleLogger.info("$consolePrefixString${msg(this)}") }
 
     /**
      * 向控制台(其实是向JAVA日志)输出INFO日志
@@ -34,16 +61,37 @@ class MessageManager(plugin: Plugin) : Terminable {
     infix fun info(msg: String): MessageManager = this.also { consoleLogger.info("$consolePrefixString$msg") }
 
     /**
+     * 向控制台(其实是向JAVA日志)输出INFO日志
+     * @param msg 要发送的消息
+     */
+    infix fun info(msg: (MessageManager) -> String) =
+        this.also { consoleLogger.info("$consolePrefixString${msg(this)}") }
+
+    /**
      * 向控制台(其实是向JAVA日志)输出WARN日志
      * @param msg 要发送的消息
      */
     infix fun warn(msg: String): MessageManager = this.also { consoleLogger.warning("$consolePrefixString$msg") }
 
     /**
+     * 向控制台(其实是向JAVA日志)输出WARN日志
+     * @param msg 要发送的消息
+     */
+    infix fun warn(msg: (MessageManager) -> String) =
+        this.also { consoleLogger.warning("$consolePrefixString${msg(this)}") }
+
+    /**
      * 向控制台(其实是向JAVA日志)输出ERROR日志
      * @param msg 要发送的消息
      */
     infix fun error(msg: String): MessageManager = this.also { consoleLogger.severe("$consolePrefixString$msg") }
+
+    /**
+     * 向控制台(其实是向JAVA日志)输出ERROR日志
+     * @param msg 要发送的消息
+     */
+    infix fun error(msg: (MessageManager) -> String) =
+        this.also { consoleLogger.severe("$consolePrefixString${msg(this)}") }
 
     fun sprintf(provider: Boolean, color: Boolean, formatText: String, vararg params: Any?): String {
         // 语言映射处理
