@@ -13,8 +13,7 @@ import java.util.function.Consumer
 
 
 fun String.getConfigFileType(): ConfigManager.ConfigFileType {
-    val splits = split(".").toTypedArray()
-    when (splits.last().uppercase(Locale.getDefault())) {
+    when (split(".").toTypedArray().last().uppercase(Locale.getDefault())) {
         "YML", "YAML" -> return ConfigManager.ConfigFileType.YAML
         "JSON" -> return ConfigManager.ConfigFileType.JSON
         "CONF" -> return ConfigManager.ConfigFileType.HOCON
@@ -83,6 +82,7 @@ fun File.saveConfigurationTree(config: ConfigurationNode): Unit = when (path.get
  * - `ConfigurationNode.getInt()`等等的，就是把 Scalar 转换成对应的格式。
  * - `getChildrenList` 和 `getChildrenMap` 获得的依然是 Node 的集合，在遍历的时候比较有用。
  */
+@Deprecated("Hoplite is better", ReplaceWith("ConfigManager2"), DeprecationLevel.WARNING)
 class ConfigManager
 /**
  * 构造函数
