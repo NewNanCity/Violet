@@ -2,7 +2,7 @@
 
 package city.newnan.violet.config
 
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -11,76 +11,34 @@ import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper
 import com.fasterxml.jackson.dataformat.toml.TomlMapper
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory
 import me.lucko.helper.Schedulers
 import me.lucko.helper.scheduler.Task
 import me.lucko.helper.terminable.Terminable
 import me.lucko.helper.terminable.TerminableConsumer
-import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.OfflinePlayer
 import org.bukkit.plugin.Plugin
 import java.io.*
-import java.util.*
 import kotlin.collections.HashMap
 
-/**
- * 使用索引器路径获取节点
- *
- * ```
- * val node1 = node["foo", 2, "bar"]
- * ```
- *
- * @receiver [ObjectNode]
- * @param paths Paths 字符串或整数，分别用于索引Object和Array
- * @return [ObjectNode]
- * @throws Exception 未知路径类型
- */
-operator fun ObjectNode.get(vararg paths: Any): ObjectNode {
-    var node: ObjectNode = this
-    for (path in paths) {
-        node = when (path) {
-            is String -> node[path] as ObjectNode
-            is Int -> node[path] as ObjectNode
-            else -> throw Exception("Unknown path type: ${path::class.java} (value: $path)")
-        }
-    }
-    return node
-}
-
-infix fun ObjectNode.get(key: String) = get(key) as ObjectNode
-
-fun <T> ObjectNode.asType(): T = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
-    .convertValue(this, object : com.fasterxml.jackson.core.type.TypeReference<T>() {})
-fun ObjectNode.asMap() = asType<LinkedHashMap<String, Any>>()
-fun Map<*, *>.toObjectNode(): ObjectNode = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
-    .valueToTree(this)
-fun ObjectNode.asList() = asType<ArrayList<Any>>()
-fun List<*>.toObjectNode(): ObjectNode = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
-    .valueToTree(this)
-fun <T> T.asObjectNode(): ObjectNode = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
-    .valueToTree(this)
-fun JsonNode.asUUID(): UUID = UUID.fromString(asText())
-fun ObjectNode.put(key: String, value: UUID): ObjectNode = put(key, value.toString())
-fun JsonNode.asPlayer(): OfflinePlayer = Bukkit.getOfflinePlayer(asUUID())
-fun ObjectNode.put(key: String, value: OfflinePlayer): ObjectNode = put(key, value.uniqueId.toString())
-fun JsonNode.asMaterial(): Material? = Material.matchMaterial(asText())
-fun ObjectNode.put(key: String, value: Material): ObjectNode = put(key, value.key.toString())
 
 /**
  * 配置文件对象
  *
- * @param plugin 插件实例
- * @param dataFolder 配置文件目录
- * @param mapper Jackson mapper
+ * @property type 类型
+ * @property manager 配置管理器实例
+ * @constructor Create [Configure2]
+ *
+ * @param path 配置文件路径
+ * @param node 配置文件的根节点
  */
 class Configure2(
-    rawPath: File,
+    path: File?,
     /**
      * 配置文件类型
      */
     var type: ConfigManager2.ConfigFileType,
-    nodeInit: ObjectNode,
+    node: ObjectNode,
     /**
      * 配置文件绑定的ConfigManager2
      */
@@ -92,9 +50,10 @@ class Configure2(
      * 配置文件启用或关闭持久化保存，即不会因为长久未访问就从内存中卸载，适合经常访问的配置文件。
      */
     fun setCache(enable: Boolean) {
+        if (path == null) return
         if (enable == _enableCache) return
         _enableCache = enable
-        val p = path.canonicalPath
+        val p = path!!.canonicalPath
         if (enable) {
             manager.configCache[p] = this
             manager.configTimestampMap[p] = System.currentTimeMillis()
@@ -125,9 +84,10 @@ class Configure2(
      * @param enable 是否启动持久化
      */
     fun setPersistence(enable: Boolean) {
+        if (path == null) return
         if (enable == _enablePersistence) return
         _enablePersistence = enable
-        if (enable) manager.persistentConfigSet.add(path.canonicalPath)
+        if (enable) manager.persistentConfigSet.add(path!!.canonicalPath)
     }
     /**
      * 将某个文件设置为持久化保存的，即不会因为长久未访问就从内存中卸载；或者取消。以缓存为前提。
@@ -139,12 +99,12 @@ class Configure2(
     /**
      * 配置文件路径
      */
-    var path: File = rawPath.canonicalFile
+    var path: File? = path?.canonicalFile
 
     /**
      * 配置文件的Jackson根节点
      */
-    var node = nodeInit
+    var node = node
         private set
 
     /**
@@ -191,32 +151,33 @@ class Configure2(
      */
     @Throws(ConfigManager2.UnknownConfigFileFormatException::class, IOException::class)
     fun save() {
+        if (path == null) return
         val mapper: ObjectMapper
         try {
             mapper = ConfigManager2.mapper[type]
         } catch (e: Exception) {
-            throw ConfigManager2.UnknownConfigFileFormatException(path.canonicalPath)
+            throw ConfigManager2.UnknownConfigFileFormatException(path!!.canonicalPath)
         }
-        val writer = BufferedWriter(FileWriter(path))
+        val writer = BufferedWriter(FileWriter(path!!))
         mapper.writeValue(writer, node)
         writer.close()
         if (_enableCache) {
-            manager.configTimestampMap[path.canonicalPath] = System.currentTimeMillis()
+            manager.configTimestampMap[path!!.canonicalPath] = System.currentTimeMillis()
         }
     }
 
     /**
      * 克隆一个新的配置文件
-     * @param file 要保存的文件
+     * @param file 要保存的文件，注意路径是相对于插件数据目录的
      * @param type 配置文件类型
      * @return 新的配置文件实例
      */
     fun clone(file: String, type: ConfigManager2.ConfigFileType? = null): Configure2
-        = clone(File(file), type)
+        = clone(File(manager.plugin.dataFolder, file), type)
 
     /**
      * 克隆一个新的配置文件
-     * @param file 要保存的文件
+     * @param file 要保存的文件，不是相对于插件数据目录的
      * @param type 配置文件类型
      * @return 新的配置文件实例
      */
@@ -225,7 +186,7 @@ class Configure2(
 
     /**
      * 保存为另一个文件
-     * @param file 要保存的文件
+     * @param file 要保存的文件，不是相对于插件数据目录的
      * @param clone 是否克隆一个新的配置文件
      * @param type 配置文件类型
      * @return 新的配置文件实例
@@ -242,13 +203,13 @@ class Configure2(
 
     /**
      * 保存为另一个文件
-     * @param file 要保存的文件
+     * @param file 要保存的文件，注意路径是相对于插件数据目录的
      * @param clone 是否克隆一个新的配置文件
      * @param type 配置文件类型
      * @return 新的配置文件实例
      */
     fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null): Configure2
-        = saveAs(File(file), clone, type)
+        = saveAs(File(manager.plugin.dataFolder, file), clone, type)
 
     /**
      * 保存为另一个文件
@@ -280,14 +241,25 @@ class Configure2(
      */
     inline fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
                       block: (ObjectNode) -> Unit): Configure2
-        = saveAs(File(file), clone, type, block)
+        = saveAs(File(manager.plugin.dataFolder, file), clone, type, block)
 
     /**
      * 删除配置文件
      */
     fun remove() {
+        if (path == null) return
         unload()
-        path.delete()
+        path!!.delete()
+    }
+
+    /**
+     * 转换为字符串
+     *
+     * @param type Type 类型
+     * @return
+     */
+    fun toString(type: ConfigManager2.ConfigFileType = this.type): String {
+        return ConfigManager2.mapper[type].writeValueAsString(node)
     }
 }
 
@@ -299,19 +271,29 @@ class ConfigManager2
     /**
      * 绑定的插件实例
      */
-    private val plugin: Plugin
+    val plugin: Plugin
 ) : Terminable {
     companion object {
         private val MapperBuilders = hashMapOf(
-            ConfigFileType.Json to { ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Yaml to { YAMLMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Toml to { TomlMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Properties to { JavaPropsMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Csv to { CsvMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Xml to { XmlMapper().enable(SerializationFeature.INDENT_OUTPUT) },
-            ConfigFileType.Hocon to { ObjectMapper(HoconFactory()).enable(SerializationFeature.INDENT_OUTPUT) }
+            ConfigFileType.Json to { decorateMapper(ObjectMapper()) },
+            ConfigFileType.Yaml to { decorateMapper(YAMLMapper()) },
+            ConfigFileType.Toml to { decorateMapper(TomlMapper()) },
+            ConfigFileType.Properties to { decorateMapper(JavaPropsMapper()) },
+            ConfigFileType.Csv to { decorateMapper(CsvMapper()) },
+            ConfigFileType.Xml to { decorateMapper(XmlMapper()) },
+            ConfigFileType.Hocon to { decorateMapper(ObjectMapper(HoconFactory())) }
         )
         private val Mappers = HashMap<ConfigFileType, ObjectMapper>()
+        private fun decorateMapper(mapper: ObjectMapper): ObjectMapper {
+            // 序列化时使用缩进
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true)
+            // 解析时忽略未知的属性
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            // 支持 Kotlin 类
+            // https://github.com/FasterXML/jackson-module-kotlin
+            mapper.registerKotlinModule()
+            return mapper
+        }
 
         /**
          * 获取一个 mapper
@@ -566,6 +548,17 @@ class ConfigManager2
         configCache.clear()
         configTimestampMap.clear()
         persistentConfigSet.clear()
+    }
+
+    /**
+     * 从文本中加载配置文件
+     * @param text 文本
+     * @param type 配置文件类型
+     * @return 配置文件实例
+     */
+    fun parseText(text: String, type: ConfigFileType): Configure2 {
+        val node = mapper[type].readTree(text) as ObjectNode
+        return Configure2(null, type, node, this)
     }
 
     /**

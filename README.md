@@ -4,7 +4,7 @@
 
 Useful toolkits java library for Bukkit Server Plugin.
 
-- [x] ConfigManager (JSON, YAML, TOML, HOCON, Properties)
+- [x] [ConfigManager](./docs/config.md) (JSON, YAML, TOML, HOCON, Properties, XML, CSV)
 - [x] MessageManager (i18n Supported)
 - [x] LanguageManager
 - [x] CommandManager (Deprecated, and recommend to use [aikar's commands](https://github.com/aikar/commands))

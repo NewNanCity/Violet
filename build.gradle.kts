@@ -41,9 +41,6 @@ dependencies {
     api("org.ktorm:ktorm-core:3.6.0")
     // Network
     api("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
-    // JSON
-    api("com.lectra:koson:1.2.5")
-    api("com.google.code.gson:gson:2.10.1")
     // JDK
     api("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
     // ConfigureFile
@@ -56,6 +53,7 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
     api("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     // Test
     testImplementation(kotlin("test"))
 }
