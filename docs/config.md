@@ -30,6 +30,15 @@ config.root {
     val inventory = it["inventory"].asBase64Inventory()
     val location = it["location"].asConfigurationSerializable<Location>()
 }
+
+// Class mapping mode
+data class Config(
+    val a: Int,
+    val b: String,
+)
+val c1 = ConfigManager2.parse<Config>("""{"a":1,"b":"a"}""", ConfigManager2.ConfigFileType.Json) // to object
+val c2 = ConfigManager2.parse<Config>(File("/root/example/config.yml")) // parse object from file
+val c3 = configManager.parse<Config>("config.yml") // parse object from config
 ```
 
 Write:
@@ -43,6 +52,11 @@ configManager["store.json"].save {
     it.setBase64("example-inventory", Bukkit.getOfflinePlayers()[0].player!!.inventory)
     it.remove("foo")
 }
+
+// Class mapping mode
+ConfigManager2.stringify(Config(1, "a"), ConfigManager2.ConfigFileType.Json) // to string: {"a":1,"b":"a"}
+ConfigManager2.save(Config(1, "a"), File("/root/example/config.yml")) // save object to file
+configManager.save(Config(1, "a"), "config.yml") // save object to config
 ```
 
 Multi-type support:

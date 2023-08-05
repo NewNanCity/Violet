@@ -41,13 +41,13 @@ infix fun ObjectNode.get(key: String) = get(key) as ObjectNode
 
 fun <T> JsonNode.asType(): T = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
     .convertValue(this, object : com.fasterxml.jackson.core.type.TypeReference<T>() {})
-fun JsonNode.asMap() = asType<LinkedHashMap<String, Any>>()
+fun <K> JsonNode.asMap() = asType<LinkedHashMap<String, K>>()
 fun Map<*, *>.toObjectNode(): ObjectNode = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
     .valueToTree(this)
 fun ObjectNode.put(key: String, value: Map<*, *>) {
     replace(key, value.toObjectNode())
 }
-fun JsonNode.asList() = asType<ArrayList<Any>>()
+fun <T> JsonNode.asList() = asType<ArrayList<T>>()
 fun List<*>.toObjectNode(): ObjectNode = ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json]
     .valueToTree(this)
 fun ObjectNode.put(key: String, value: List<*>) {
@@ -66,9 +66,9 @@ fun ObjectNode.put(key: String, value: ConfigurationSerializable): ObjectNode
     = replace(key,
     ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json].valueToTree<ObjectNode>(value.serialize())) as ObjectNode
 fun <T : ConfigurationSerializable> JsonNode.asConfigurationSerializable(): T?
-    = ConfigurationSerialization.deserializeObject(asMap()) as T?
+    = ConfigurationSerialization.deserializeObject(asMap<Any>()) as T?
 fun JsonNode.asBase64Inventory(): Inventory {
-    val map = asMap()
+    val map = asMap<Any>()
     return InventorySerialization.decodeInventory(map["data"] as String, map["title"] as String)
 }
 fun JsonNode.asBase64ItemStacks(): Array<ItemStack>

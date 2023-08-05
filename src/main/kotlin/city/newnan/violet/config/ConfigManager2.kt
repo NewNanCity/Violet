@@ -2,6 +2,7 @@
 
 package city.newnan.violet.config
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -49,9 +50,9 @@ class Configure2(
     /**
      * 配置文件启用或关闭持久化保存，即不会因为长久未访问就从内存中卸载，适合经常访问的配置文件。
      */
-    fun setCache(enable: Boolean) {
-        if (path == null) return
-        if (enable == _enableCache) return
+    fun setCache(enable: Boolean): Configure2 {
+        if (path == null) return this
+        if (enable == _enableCache) return this
         _enableCache = enable
         val p = path!!.canonicalPath
         if (enable) {
@@ -64,6 +65,7 @@ class Configure2(
             manager.persistentConfigSet.remove(p)
             save()
         }
+        return this
     }
     /**
      * 配置文件启用或关闭持久化保存，即不会因为长久未访问就从内存中卸载，适合经常访问的配置文件。
@@ -83,11 +85,12 @@ class Configure2(
      *
      * @param enable 是否启动持久化
      */
-    fun setPersistence(enable: Boolean) {
-        if (path == null) return
-        if (enable == _enablePersistence) return
+    fun setPersistence(enable: Boolean): Configure2 {
+        if (path == null) return this
+        if (enable == _enablePersistence) return this
         _enablePersistence = enable
         if (enable) manager.persistentConfigSet.add(path!!.canonicalPath)
+        return this
     }
     /**
      * 将某个文件设置为持久化保存的，即不会因为长久未访问就从内存中卸载；或者取消。以缓存为前提。
@@ -95,6 +98,7 @@ class Configure2(
      * @param enable 是否启动持久化
      */
     infix fun persistence(enable: Boolean) = setPersistence(enable)
+    fun persistence() = persistence(true)
 
     /**
      * 配置文件路径
@@ -284,16 +288,15 @@ class ConfigManager2
             ConfigFileType.Hocon to { decorateMapper(ObjectMapper(HoconFactory())) }
         )
         private val Mappers = HashMap<ConfigFileType, ObjectMapper>()
-        private fun decorateMapper(mapper: ObjectMapper): ObjectMapper {
-            // 序列化时使用缩进
-            mapper.configure(SerializationFeature.INDENT_OUTPUT, true)
-            // 解析时忽略未知的属性
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            // 支持 Kotlin 类
-            // https://github.com/FasterXML/jackson-module-kotlin
-            mapper.registerKotlinModule()
-            return mapper
-        }
+        private fun decorateMapper(mapper: ObjectMapper): ObjectMapper = mapper
+                // 序列化时使用缩进
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                // 解析时忽略未知的属性
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                // 支持 Kotlin 类
+                // https://github.com/FasterXML/jackson-module-kotlin
+                .registerKotlinModule()
+
 
         /**
          * 获取一个 mapper
@@ -321,6 +324,52 @@ class ConfigManager2
             "xml" -> ConfigFileType.Xml
             "conf", "hocon" -> ConfigFileType.Hocon
             else -> throw UnknownConfigFileFormatException(path.path)
+        }
+
+        /**
+         * 使用指定类型解析配置文件
+         *
+         * @param T 指定类型
+         * @param path 配置文件路径
+         * @param type 配置文件类型，如果为null则自动检测
+         * @return [T] 实例
+         */
+        @Throws(IOException::class, UnknownConfigFileFormatException::class)
+        inline fun <reified T> parse(path: File, type: ConfigFileType? = null): T {
+            // 读取配置文件
+            val typeReal = type ?: guessConfigType(path)
+            return mapper[typeReal].readValue(path, T::class.java)
+        }
+
+        /**
+         * 使用指定类型解析文本
+         *
+         * @param T 指定类型
+         * @param config 配置文本
+         * @param type 配置文件类型
+         * @return [T] 实例
+         */
+        @Throws(JsonProcessingException::class, UnknownConfigFileFormatException::class)
+        inline fun <reified T> parse(config: String, type: ConfigFileType): T {
+            return mapper[type].readValue(config, T::class.java)
+        }
+
+        /**
+         * 序列化为文本
+         *
+         * @param T 指定类型
+         * @param type 配置文件类型
+         * @return [String] 文本
+         */
+        @Throws(JsonProcessingException::class, UnknownConfigFileFormatException::class)
+        inline fun <reified T> stringify(obj: T, type: ConfigFileType): String {
+            return mapper[type].writeValueAsString(obj)
+        }
+
+        @Throws(IOException::class, UnknownConfigFileFormatException::class)
+        inline fun <reified T> save(obj: T, path: File, type: ConfigFileType? = null) {
+            val typeReal = type ?: guessConfigType(path)
+            mapper[typeReal].writeValue(path, obj)
         }
     }
 
@@ -483,6 +532,7 @@ class ConfigManager2
     /**
      * 直接从文件获取某个配置文件(支持YAML,JSON,TOML,HOCON,XML,Properties和CSV)，不使用缓存机制
      * @param configFile 配置文件路径
+     * @param type 配置文件类型，如果为null则自动检测
      * @return 配置实例
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
@@ -495,6 +545,37 @@ class ConfigManager2
         val path = File(plugin.dataFolder, configFile)
         val typeReal = type ?: guessConfigType(path)
         return Configure2(path, typeReal, mapper[typeReal].readTree(path) as ObjectNode, this)
+    }
+
+    /**
+     * 使用指定类型解析配置文件
+     *
+     * @param T 指定类型
+     * @param configFile 配置文件路径
+     * @param type 配置文件类型，如果为null则自动检测
+     * @return [T] 实例
+     */
+    @Throws(IOException::class, UnknownConfigFileFormatException::class)
+    inline fun <reified T> parse(configFile: String, type: ConfigFileType? = null): T {
+        // 未缓存则加载
+        touch(configFile)
+        // 读取配置文件
+        return parse(File(plugin.dataFolder, configFile), type)
+    }
+
+    /**
+     * 序列化对象到指定的配置文件
+     *
+     * @param T 指定类型
+     * @param obj 对象实例
+     * @param configFile 配置文件路径
+     * @param type 配置文件类型，如果为null则自动检测
+     * @return [T] 实例
+     */
+    @Throws(IOException::class, UnknownConfigFileFormatException::class)
+    inline fun <reified T> save(obj: T, configFile: String, type: ConfigFileType? = null) {
+        // 读取配置文件
+        save(obj, File(plugin.dataFolder, configFile), type)
     }
 
     /**
