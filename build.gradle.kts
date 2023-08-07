@@ -1,8 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val groupIdVal = "city.newnan"
-val versionVal = "2.0.11"
-
 idea {
     module {
         isDownloadJavadoc = true
@@ -10,14 +7,16 @@ idea {
     }
 }
 
-group = groupIdVal
-version = versionVal
+val targetJavaVersion = 11
+
+version = "2.0.11"
+group = "city.newnan.violet"
+description = "Useful toolkits java library for Bukkit Server Plugin."
 
 plugins {
     id("idea")
     id("maven-publish")
-    kotlin("jvm") version "1.8.21"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    kotlin("jvm") version "1.6.21"
 }
 
 repositories {
@@ -38,27 +37,39 @@ dependencies {
     compileOnly("com.zaxxer:HikariCP:4.0.3")
     compileOnly("org.ktorm:ktorm-core:3.6.0")
     // Network
-    compileOnly("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
+    compileOnly("com.squareup.okhttp3:okhttp:4.11.0")
     // ConfigureFile
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.14.3")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.3")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.3")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.3")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.3")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.14.3")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
     compileOnly("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
-    compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.3")
+    compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     // Test
     testImplementation(kotlin("test"))
 }
 
 tasks.test { useJUnitPlatform() }
 
-java.targetCompatibility = JavaVersion.VERSION_11
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+java {
+    val javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
 }
+
+tasks.withType<JavaCompile>().configureEach {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = JavaVersion.toVersion(targetJavaVersion).toString()
+}
+
 
 afterEvaluate {
     publishing {
@@ -67,12 +78,12 @@ afterEvaluate {
                 // Applies the component for the release build variant.
                 from(components["kotlin"])
                 // You can then customize attributes of the publication as shown below.
-                groupId = groupIdVal
-                artifactId = "Violet"
-                version = versionVal
+                groupId = project.group as String
+                artifactId = project.name
+                version = project.version as String
                 pom {
-                    name.set("Violet")
-                    description.set("Useful toolkits java library for Bukkit Server Plugin.")
+                    name.set(project.name)
+                    description.set(project.description!!)
                     url.set("https://github.com/NewNanCity/Violet")
                     licenses {
                         license {
