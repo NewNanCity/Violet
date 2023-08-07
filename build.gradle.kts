@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val groupIdVal = "city.newnan"
-val versionVal = "2.0.10"
+val versionVal = "2.0.11"
 
 idea {
     module {
@@ -41,14 +41,14 @@ dependencies {
     compileOnly("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
     // ConfigureFile
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.14.3")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.3")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.3")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.3")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.3")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.14.3")
     compileOnly("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.3")
     // Test
     testImplementation(kotlin("test"))
 }
