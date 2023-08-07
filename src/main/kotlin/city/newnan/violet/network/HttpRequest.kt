@@ -1,8 +1,7 @@
 package city.newnan.violet.network
 
-import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import city.newnan.violet.config.ConfigManager2
+import com.fasterxml.jackson.databind.JsonNode
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request.Builder
@@ -10,9 +9,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 private val JSON_TYPE: MediaType = "application/json;charset=utf-8".toMediaType()
-infix fun Builder.post(body: JsonObject)
-    = post(body.toString().toRequestBody(JSON_TYPE))
-infix fun Builder.post(body: JsonArray)
+infix fun Builder.post(body: JsonNode)
     = post(body.toString().toRequestBody(JSON_TYPE))
 infix fun Builder.header(pair: Pair<String, String>)
     = header(pair.first, pair.second)
@@ -86,10 +83,10 @@ class HttpRespondHandler internal constructor(async: Boolean, block: HttpRespond
                     when(preprocessType) {
                         PreprocessType.RAW -> onSuccess(response, response)
                         PreprocessType.JSON_ARRAY -> onSuccess(
-                            response, gson.fromJson(response?.body?.string() ?: "[]", JsonArray::class.java)
+                            response, ConfigManager2.parse<JsonNode>(response?.body?.string() ?: "[]", ConfigManager2.ConfigFileType.Json)
                         )
                         PreprocessType.JSON_OBJECT -> onSuccess(
-                            response, gson.fromJson(response?.body?.string() ?: "{}", JsonObject::class.java)
+                            response, ConfigManager2.parse<JsonNode>(response?.body?.string() ?: "{}", ConfigManager2.ConfigFileType.Json)
                         )
                     }
                 } catch (e: IOException) {
@@ -100,7 +97,6 @@ class HttpRespondHandler internal constructor(async: Boolean, block: HttpRespond
     }
 
     companion object {
-        private val gson = Gson()
         private val syncHandler: (Call, (Response?, Exception?) -> Unit) -> Unit = {
                 networkCall, responseHandler ->
             try {

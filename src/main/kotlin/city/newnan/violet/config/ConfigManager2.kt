@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper
 import com.fasterxml.jackson.dataformat.toml.TomlMapper
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory
@@ -288,7 +289,8 @@ class ConfigManager2
             ConfigFileType.Hocon to { decorateMapper(ObjectMapper(HoconFactory())) }
         )
         private val Mappers = HashMap<ConfigFileType, ObjectMapper>()
-        private fun decorateMapper(mapper: ObjectMapper): ObjectMapper = mapper
+        private fun decorateMapper(mapper: ObjectMapper): ObjectMapper {
+            mapper
                 // 序列化时使用缩进
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 // 解析时忽略未知的属性
@@ -296,6 +298,12 @@ class ConfigManager2
                 // 支持 Kotlin 类
                 // https://github.com/FasterXML/jackson-module-kotlin
                 .registerKotlinModule()
+            if (mapper is YAMLMapper) {
+                // 不需要写入 YAML 文档开始标记 ---
+                mapper.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+            }
+            return mapper
+        }
 
 
         /**

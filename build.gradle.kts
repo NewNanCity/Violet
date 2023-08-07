@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val groupIdVal = "city.newnan"
-val versionVal = "2.0.8"
+val versionVal = "2.0.10"
 
 idea {
     module {
@@ -29,31 +29,26 @@ repositories {
 }
 
 dependencies {
-    api(kotlin("stdlib"))
-    api(kotlin("reflect"))
     // Minecraft
     compileOnly("org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT")
     // Utils
-    api("me.lucko:helper:5.6.13")
+    compileOnly("me.lucko:helper:5.6.13")
     // Database
-    api("mysql:mysql-connector-java:8.0.33")
-    api("com.zaxxer:HikariCP:4.0.3")
-    api("org.ktorm:ktorm-core:3.6.0")
+    compileOnly("mysql:mysql-connector-java:8.0.33")
+    compileOnly("com.zaxxer:HikariCP:4.0.3")
+    compileOnly("org.ktorm:ktorm-core:3.6.0")
     // Network
-    api("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
-    // JDK
-    api("org.jetbrains.kotlin:kotlin-stdlib:1.8.21")
+    compileOnly("com.squareup.okhttp3:okhttp:5.0.0-alpha.11")
     // ConfigureFile
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    // api("com.fasterxml.jackson.core:jackson-core:2.15.2")
-    api("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
-    api("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
+    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
+    compileOnly("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     // Test
     testImplementation(kotlin("test"))
 }

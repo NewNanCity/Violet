@@ -1,6 +1,6 @@
 package city.newnan.violet.i18n
 
-import city.newnan.violet.config.ConfigManager.UnknownConfigFileFormatException
+import city.newnan.violet.config.ConfigManager2.UnknownConfigFileFormatException
 import city.newnan.violet.message.LanguageProvider
 import me.lucko.helper.terminable.Terminable
 import me.lucko.helper.terminable.TerminableConsumer

@@ -1,8 +1,7 @@
 package city.newnan.violet.i18n
 
-import city.newnan.violet.config.ConfigManager.UnknownConfigFileFormatException
-import city.newnan.violet.config.loadConfigurationTree
-import me.lucko.helper.config.ConfigurationNode
+import city.newnan.violet.config.ConfigManager2
+import com.fasterxml.jackson.databind.node.ObjectNode
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -10,25 +9,29 @@ import javax.annotation.Nonnull
 
 
 class Language(private val languageFile: File, @get:Nonnull val language: Locale) {
-    private var languageRoot: ConfigurationNode? = null
-    private val pathCache: MutableMap<String, String?> = HashMap()
+    private val languageNodes = mutableMapOf<String, String>()
 
     init {
         reload()
     }
 
-    @Throws(IOException::class, UnknownConfigFileFormatException::class)
+    @Throws(IOException::class, ConfigManager2.UnknownConfigFileFormatException::class)
     fun reload() {
-        languageRoot = languageFile.loadConfigurationTree()
-        pathCache.clear()
+        languageNodes.clear()
+        fun visit(node: ObjectNode, path: String = "") {
+            for ((key, value) in node.fields()) {
+                val newPath = if (path.isEmpty()) key else "$path.$key"
+                if (value.isObject) {
+                    visit(value as ObjectNode, newPath)
+                } else {
+                    languageNodes[newPath] = value.asText()
+                }
+            }
+        }
+        visit(ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json].readTree(languageFile) as ObjectNode)
     }
 
     fun getNodeString(path: String): String? {
-        var str = pathCache[path]
-        if (str == null) {
-            str = languageRoot!!.getNode(*path.split("\\.").toTypedArray()).string
-            pathCache[path] = str
-        }
-        return str
+        return languageNodes[path]
     }
 }
