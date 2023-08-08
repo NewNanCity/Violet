@@ -7,9 +7,9 @@ idea {
     }
 }
 
-val targetJavaVersion = 11
+val targetJavaVersion = 8
 
-version = "2.0.12"
+version = "2.0.13"
 group = "city.newnan.violet"
 description = "Useful toolkits java library for Bukkit Server Plugin."
 

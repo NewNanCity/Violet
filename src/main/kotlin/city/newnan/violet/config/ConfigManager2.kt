@@ -3,6 +3,7 @@
 package city.newnan.violet.config
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -118,7 +119,7 @@ class Configure2(
      * @param block 根节点修改器
      * @return [Configure2]
      */
-    inline fun root(block: (ObjectNode) -> Unit): Configure2 {
+    fun root(block: (ObjectNode) -> Unit): Configure2 {
         block(node)
         return this
     }
@@ -129,7 +130,7 @@ class Configure2(
      * @param paths 路径
      * @return 节点
      */
-    inline fun path(vararg paths: Any, block: (ObjectNode) -> Unit): Configure2 {
+    fun path(vararg paths: Any, block: (ObjectNode) -> Unit): Configure2 {
         block(node[paths])
         return this
     }
@@ -146,7 +147,7 @@ class Configure2(
      * 保存配置文件
      * @param block 配置文件修改器
      */
-    inline fun save(block: (ObjectNode) -> Unit) {
+    fun save(block: (ObjectNode) -> Unit) {
         block(node)
         save()
     }
@@ -224,7 +225,7 @@ class Configure2(
      * @param block 保存之前的操作
      * @return 新的配置文件实例
      */
-    inline fun saveAs(file: File, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
+    fun saveAs(file: File, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
                       block: (ObjectNode) -> Unit): Configure2 {
         val typeReal = type ?: ConfigManager2.guessConfigType(file)
         val c = if (clone) clone(file, type) else this.also {
@@ -244,7 +245,7 @@ class Configure2(
      * @param block 保存之前的操作
      * @return 新的配置文件实例
      */
-    inline fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
+    fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
                       block: (ObjectNode) -> Unit): Configure2
         = saveAs(File(manager.plugin.dataFolder, file), clone, type, block)
 
@@ -343,10 +344,10 @@ class ConfigManager2
          * @return [T] 实例
          */
         @Throws(IOException::class, UnknownConfigFileFormatException::class)
-        inline fun <reified T> parse(path: File, type: ConfigFileType? = null): T {
+        fun <T> parse(path: File, type: ConfigFileType? = null): T {
             // 读取配置文件
             val typeReal = type ?: guessConfigType(path)
-            return mapper[typeReal].readValue(path, T::class.java)
+            return mapper[typeReal].readValue(path, object : TypeReference<T>() {})
         }
 
         /**
@@ -358,8 +359,8 @@ class ConfigManager2
          * @return [T] 实例
          */
         @Throws(JsonProcessingException::class, UnknownConfigFileFormatException::class)
-        inline fun <reified T> parse(config: String, type: ConfigFileType): T {
-            return mapper[type].readValue(config, T::class.java)
+        fun <T> parse(config: String, type: ConfigFileType): T {
+            return mapper[type].readValue(config, object : TypeReference<T>() {})
         }
 
         /**
@@ -370,12 +371,12 @@ class ConfigManager2
          * @return [String] 文本
          */
         @Throws(JsonProcessingException::class, UnknownConfigFileFormatException::class)
-        inline fun <reified T> stringify(obj: T, type: ConfigFileType): String {
+        fun <T> stringify(obj: T, type: ConfigFileType): String {
             return mapper[type].writeValueAsString(obj)
         }
 
         @Throws(IOException::class, UnknownConfigFileFormatException::class)
-        inline fun <reified T> save(obj: T, path: File, type: ConfigFileType? = null) {
+        fun <T> save(obj: T, path: File, type: ConfigFileType? = null) {
             val typeReal = type ?: guessConfigType(path)
             mapper[typeReal].writeValue(path, obj)
         }
@@ -564,7 +565,7 @@ class ConfigManager2
      * @return [T] 实例
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    inline fun <reified T> parse(configFile: String, type: ConfigFileType? = null): T {
+    fun <T> parse(configFile: String, type: ConfigFileType? = null): T {
         // 未缓存则加载
         touch(configFile)
         // 读取配置文件
@@ -581,7 +582,7 @@ class ConfigManager2
      * @return [T] 实例
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    inline fun <reified T> save(obj: T, configFile: String, type: ConfigFileType? = null) {
+    fun <T> save(obj: T, configFile: String, type: ConfigFileType? = null) {
         // 读取配置文件
         save(obj, File(plugin.dataFolder, configFile), type)
     }

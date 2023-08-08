@@ -1,30 +1,53 @@
 package city.newnan.violet.message
 
+import me.lucko.helper.Events
 import me.lucko.helper.terminable.Terminable
 import me.lucko.helper.terminable.TerminableConsumer
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.entity.Player
+import org.bukkit.event.EventPriority
+import org.bukkit.event.player.AsyncPlayerChatEvent
 import org.bukkit.plugin.Plugin
 import java.text.MessageFormat
 
 private val consoleLogger = Bukkit.getLogger()
 
-class MessageManager(plugin: Plugin) : Terminable {
+class MessageManager(private val plugin: Plugin) : Terminable {
     init { if (plugin is TerminableConsumer) bindWith(plugin) }
 
     private var languageProvider: LanguageProvider? = null
     internal var playerPrefixString = ""
-    internal val consolePrefixString: String
+    internal val consolePrefixString: String = "[${plugin.description.name}] "
 
     /**
      * 调试模式，默认为`false`
      */
     var debugMode: Boolean = false
 
-    init {
-        consolePrefixString = "[${plugin.description.name}] "
+    /**
+     * 获取用户的下一个聊天框输入
+     * @param player 要获取输入的玩家
+     * @param block 获取到输入后的回调函数，返回`true`或`null`(不返回)则结束获取输入，返回`false`则继续获取输入并处理
+     */
+    fun gets(player: Player, block: (String) -> Boolean?) {
+        var done = false
+        Events.subscribe(AsyncPlayerChatEvent::class.java, EventPriority.HIGHEST)
+            .expireIf { done }
+            .filter { it.player == player && !it.isCancelled }
+            .handler {
+                it.isCancelled = true
+                try { done = block(it.message) ?: true }
+                catch (e: Exception) {
+                    e.printStackTrace()
+                    player.sendMessage("§cInternal Server Error!")
+                }
+            }
+            .also {
+                if (plugin is TerminableConsumer) it.bindWith(plugin)
+            }
     }
 
     /**
