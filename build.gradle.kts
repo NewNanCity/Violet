@@ -9,7 +9,7 @@ idea {
 
 val targetJavaVersion = 8
 
-version = "2.0.14"
+version = "2.1.0"
 group = "city.newnan.violet"
 description = "Useful toolkits java library for Bukkit Server Plugin."
 
@@ -50,6 +50,26 @@ dependencies {
     compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     // Test
     testImplementation(kotlin("test"))
+    // Minecraft
+    testImplementation("org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT")
+    // Utils
+    testImplementation("me.lucko:helper:5.6.13")
+    // Database
+    testImplementation("mysql:mysql-connector-java:8.0.33")
+    testImplementation("com.zaxxer:HikariCP:4.0.3")
+    testImplementation("org.ktorm:ktorm-core:3.6.0")
+    // Network
+    testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
+    // ConfigureFile
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
+    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
+    testImplementation("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
 }
 
 tasks.test { useJUnitPlatform() }

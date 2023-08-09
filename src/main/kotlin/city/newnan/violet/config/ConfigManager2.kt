@@ -2,6 +2,10 @@
 
 package city.newnan.violet.config
 
+import city.newnan.violet.cache.Cache
+import city.newnan.violet.cache.GreedyDualSizeCache
+import city.newnan.violet.cache.InfiniteCache
+import city.newnan.violet.cache.LRUCache
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -16,13 +20,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory
-import me.lucko.helper.Schedulers
-import me.lucko.helper.scheduler.Task
 import me.lucko.helper.terminable.Terminable
 import me.lucko.helper.terminable.TerminableConsumer
 import org.bukkit.plugin.Plugin
 import java.io.*
-import kotlin.collections.HashMap
 
 
 /**
@@ -37,6 +38,8 @@ import kotlin.collections.HashMap
  */
 class Configure2(
     path: File?,
+    val configPath: String?,
+    val cached: Boolean,
     /**
      * 配置文件类型
      */
@@ -47,61 +50,6 @@ class Configure2(
      */
     val manager: ConfigManager2
 ) {
-    private var _enableCache = false
-    private var _enablePersistence = false
-    /**
-     * 配置文件启用或关闭持久化保存，即不会因为长久未访问就从内存中卸载，适合经常访问的配置文件。
-     */
-    fun setCache(enable: Boolean): Configure2 {
-        if (path == null) return this
-        if (enable == _enableCache) return this
-        _enableCache = enable
-        val p = path!!.canonicalPath
-        if (enable) {
-            manager.configCache[p] = this
-            manager.configTimestampMap[p] = System.currentTimeMillis()
-            if (_enablePersistence) manager.persistentConfigSet.add(p)
-        } else {
-            manager.configCache.remove(p)
-            manager.configTimestampMap.remove(p)
-            manager.persistentConfigSet.remove(p)
-            save()
-        }
-        return this
-    }
-    /**
-     * 配置文件启用或关闭持久化保存，即不会因为长久未访问就从内存中卸载，适合经常访问的配置文件。
-     */
-    infix fun cache(enable: Boolean) = setCache(enable)
-    /**
-     * 启动缓存
-     */
-    fun load() = setCache(true)
-    /**
-     * 将配置文件从内存中卸载并保存
-     */
-    fun unload() = setCache(false)
-
-    /**
-     * 将某个文件设置为持久化保存的，即不会因为长久未访问就从内存中卸载；或者取消。以缓存为前提。
-     *
-     * @param enable 是否启动持久化
-     */
-    fun setPersistence(enable: Boolean): Configure2 {
-        if (path == null) return this
-        if (enable == _enablePersistence) return this
-        _enablePersistence = enable
-        if (enable) manager.persistentConfigSet.add(path!!.canonicalPath)
-        return this
-    }
-    /**
-     * 将某个文件设置为持久化保存的，即不会因为长久未访问就从内存中卸载；或者取消。以缓存为前提。
-     *
-     * @param enable 是否启动持久化
-     */
-    infix fun persistence(enable: Boolean) = setPersistence(enable)
-    fun persistence() = persistence(true)
-
     /**
      * 配置文件路径
      */
@@ -136,11 +84,12 @@ class Configure2(
     }
 
     /**
-     * 放弃内存中的配置，从磁盘重新加载，如果磁盘中不存在就会加载默认配置
+     * 放弃内存中的配置，从磁盘重新加载，获得一个新实例，如果磁盘中不存在则返回自己
      */
     @Throws(IOException::class, ConfigManager2.UnknownConfigFileFormatException::class)
-    fun reload() {
-        node = ConfigManager2.mapper[type].readTree(path) as ObjectNode
+    fun reload(saveToCache: Boolean = cached): Configure2 {
+        if (path == null || configPath == null) return this
+        return manager.get(configPath, type, saveToCache = saveToCache, useCacheIfPossible = false)
     }
 
     /**
@@ -156,20 +105,9 @@ class Configure2(
      * 保存配置文件
      */
     @Throws(ConfigManager2.UnknownConfigFileFormatException::class, IOException::class)
-    fun save() {
+    fun save(path: File? = this.path, type: ConfigManager2.ConfigFileType? = this.type, saveToCache: Boolean = cached) {
         if (path == null) return
-        val mapper: ObjectMapper
-        try {
-            mapper = ConfigManager2.mapper[type]
-        } catch (e: Exception) {
-            throw ConfigManager2.UnknownConfigFileFormatException(path!!.canonicalPath)
-        }
-        val writer = BufferedWriter(FileWriter(path!!))
-        mapper.writeValue(writer, node)
-        writer.close()
-        if (_enableCache) {
-            manager.configTimestampMap[path!!.canonicalPath] = System.currentTimeMillis()
-        }
+        manager.save(this, path, type, saveToCache)
     }
 
     /**
@@ -178,33 +116,9 @@ class Configure2(
      * @param type 配置文件类型
      * @return 新的配置文件实例
      */
-    fun clone(file: String, type: ConfigManager2.ConfigFileType? = null): Configure2
-        = clone(File(manager.plugin.dataFolder, file), type)
-
-    /**
-     * 克隆一个新的配置文件
-     * @param file 要保存的文件，不是相对于插件数据目录的
-     * @param type 配置文件类型
-     * @return 新的配置文件实例
-     */
-    fun clone(file: File, type: ConfigManager2.ConfigFileType? = null): Configure2
-        = Configure2(path, type ?: ConfigManager2.guessConfigType(file), node.deepCopy(), manager)
-
-    /**
-     * 保存为另一个文件
-     * @param file 要保存的文件，不是相对于插件数据目录的
-     * @param clone 是否克隆一个新的配置文件
-     * @param type 配置文件类型
-     * @return 新的配置文件实例
-     */
-    fun saveAs(file: File, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null): Configure2 {
-        val typeReal = type ?: ConfigManager2.guessConfigType(file)
-        val c = if (clone) clone(file, type) else this.also {
-            it.path = file
-            it.type = typeReal
-        }
-        c.save()
-        return c
+    fun clone(file: String, type: ConfigManager2.ConfigFileType? = null): Configure2 {
+        val path = File(manager.plugin.dataFolder, file)
+        return Configure2(path, file, cached, type ?: ConfigManager2.guessConfigType(path), node.deepCopy(), manager)
     }
 
     /**
@@ -214,48 +128,24 @@ class Configure2(
      * @param type 配置文件类型
      * @return 新的配置文件实例
      */
-    fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null): Configure2
-        = saveAs(File(manager.plugin.dataFolder, file), clone, type)
-
-    /**
-     * 保存为另一个文件
-     * @param file 要保存的文件
-     * @param clone 是否克隆一个新的配置文件
-     * @param type 配置文件类型
-     * @param block 保存之前的操作
-     * @return 新的配置文件实例
-     */
-    fun saveAs(file: File, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
-                      block: (ObjectNode) -> Unit): Configure2 {
-        val typeReal = type ?: ConfigManager2.guessConfigType(file)
+    fun saveAs(file: String, clone: Boolean = true,
+               type: ConfigManager2.ConfigFileType? = null, block: ((ObjectNode) -> Unit)?): Configure2 {
+        val path = File(manager.plugin.dataFolder, file)
         val c = if (clone) clone(file, type) else this.also {
-            it.path = file
-            it.type = typeReal
+            it.path = path
+            it.type = type ?: ConfigManager2.guessConfigType(path)
         }
-        block(c.node)
+        block?.invoke(c.node)
         c.save()
         return c
     }
-
-    /**
-     * 保存为另一个文件
-     * @param file 要保存的文件
-     * @param clone 是否克隆一个新的配置文件
-     * @param type 配置文件类型
-     * @param block 保存之前的操作
-     * @return 新的配置文件实例
-     */
-    fun saveAs(file: String, clone: Boolean = true, type: ConfigManager2.ConfigFileType? = null,
-                      block: (ObjectNode) -> Unit): Configure2
-        = saveAs(File(manager.plugin.dataFolder, file), clone, type, block)
 
     /**
      * 删除配置文件
      */
     fun remove() {
         if (path == null) return
-        unload()
-        path!!.delete()
+        manager.remove(path!!)
     }
 
     /**
@@ -280,7 +170,10 @@ class ConfigManager2
     val plugin: Plugin
 ) : Terminable {
     companion object {
-        private val MapperBuilders = hashMapOf(
+        var DEFAULT_CACHE_CAPACITY = 8
+        var DEFAULT_CACHE_TYPE = CacheType.None
+
+        private val MapperBuilders = mapOf(
             ConfigFileType.Json to { decorateMapper(ObjectMapper()) },
             ConfigFileType.Yaml to { decorateMapper(YAMLMapper()) },
             ConfigFileType.Toml to { decorateMapper(TomlMapper()) },
@@ -289,7 +182,7 @@ class ConfigManager2
             ConfigFileType.Xml to { decorateMapper(XmlMapper()) },
             ConfigFileType.Hocon to { decorateMapper(ObjectMapper(HoconFactory())) }
         )
-        private val Mappers = HashMap<ConfigFileType, ObjectMapper>()
+        private val Mappers = mutableMapOf<ConfigFileType, ObjectMapper>()
         private fun decorateMapper(mapper: ObjectMapper): ObjectMapper {
             mapper
                 // 序列化时使用缩进
@@ -315,7 +208,7 @@ class ConfigManager2
          */
         @Throws(Exception::class)
         fun getMapper(type: ConfigFileType) =
-            Mappers.getOrPut(type) { MapperBuilders[type]?.invoke() ?: throw Exception("Unknown config file type") }
+            Mappers.getOrPut(type) { MapperBuilders[type]?.invoke() ?: throw Exception("Unknown config file type: $type") }
 
         /**
          * 根据路径推断配置文件类型
@@ -382,37 +275,15 @@ class ConfigManager2
         }
     }
 
-    /**
-     * 支持的配置文件类型
-     */
-    enum class ConfigFileType {
-        Properties, Json, Yaml, Toml, Hocon, Xml, Csv
+    init {
+        if (plugin is TerminableConsumer) bindWith(plugin)
+        setCache(DEFAULT_CACHE_TYPE, DEFAULT_CACHE_CAPACITY)
     }
 
-    init { if (plugin is TerminableConsumer) bindWith(plugin) }
-
-    /**
-     * 配置文件缓冲
-     */
-    internal val configCache = HashMap<String, Configure2>()
-
-    /**
-     * 配置文件访问时间戳
-     */
-    internal val configTimestampMap = HashMap<String, Long>()
-
-    /**
-     * 持久化保存的配置文件
-     */
-    internal val persistentConfigSet: HashSet<String> = hashSetOf("config.yml")
-
-    private var cleanTask: Task? = null
-
-    /**
-     * 缓存过期的时长(毫秒)
-     */
-    var fileCacheTimeout = 1800000L
-        set(value) { if (value > 1000L) field = value }
+    val configure2TypeReference = object : TypeReference<Configure2>() {}
+    val configure2TypeReferenceString = configure2TypeReference.type.toString()
+    var cache: Cache<Pair<String, String>, Any>? = null
+        private set
 
     object mapper {
         /**
@@ -426,84 +297,62 @@ class ConfigManager2
     }
 
     /**
-     * 启动周期性的配置缓存清理
-     * @return ConfigManager2实例
+     * 设置缓存
+     * @param type 缓存类型
+     * @param capacity 缓存容量
      */
-    fun startCleanService(): ConfigManager2 {
-        if (cleanTask != null) {
-            return this
+    fun setCache(type: CacheType, capacity: Int = DEFAULT_CACHE_CAPACITY) {
+        cache = when (type) {
+            CacheType.None -> null
+            CacheType.LRU -> LRUCache(capacity)
+            CacheType.GreedyDualSize -> GreedyDualSizeCache(capacity)
+            CacheType.Infinite -> InfiniteCache(capacity)
         }
-        // 自动卸载长时间未使用的配置文件
-        cleanTask = Schedulers.sync().runRepeating({ _: Task? ->
-            val outdatedTime = System.currentTimeMillis() - fileCacheTimeout
-            // 先存起来再修改
-            val outdatedConfig = ArrayList<Configure2>()
-            val additionalRemoveConfigPath = ArrayList<String>()
-            configTimestampMap.forEach { (config: String, time: Long) ->
-                if (time <= outdatedTime && !persistentConfigSet.contains(config)) {
-                    if (configCache.containsKey(config)) {
-                        outdatedConfig.add(configCache[config]!!)
-                    } else {
-                        additionalRemoveConfigPath.add(config)
-                    }
-                }
-            }
-            for (config in outdatedConfig) {
-                try {
-                    config.unload()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-            for (key in additionalRemoveConfigPath) {
-                persistentConfigSet.remove(key)
-                configTimestampMap.remove(key)
-            }
-        }, 36000L, 36000L)
-        return this
     }
 
-
     /**
-     * 关闭周期性的配置缓存清理
-     * @return ConfigManager2实例
+     * 设置缓存
+     * @param cache 缓存实例
      */
-    fun stopCleanService(): ConfigManager2 = this.also { cleanTask?.close() }
+    fun setCache(cache: Cache<Pair<String, String>, Any>) {
+        this.cache = cache
+    }
 
     /**
      * 检查这个配置文件是否存在，不存在就创建
      * @param configFile 配置文件路径
      * @return 如果文件之前存在就返回true，如果现在新创建就返回false
      */
-    infix fun touch(configFile: String): Boolean {
-        // 不存在就创建
-        if (!File(plugin.dataFolder, configFile).exists()) {
-            try {
-                plugin.saveResource(configFile, false)
-            } catch (e: IllegalArgumentException) {
-                // jar包中没有这个资源文件
-            }
-            return false
-        }
-        return true
-    }
+    infix fun touch(configFile: String): Boolean =
+        touch(configFile, configFile)
+
+
+    /**
+     * 获取某个配置文件(支持YAML,JSON,TOML,HOCON,XML,Properties和CSV)，如果不存在就加载默认
+     * @param configFile 配置文件路径
+     * @return 配置实例
+     * @throws IOException 文件读写出错
+     * @throws UnknownConfigFileFormatException 未知的配置文件格式
+     */
+    @Throws(IOException::class, UnknownConfigFileFormatException::class)
+    infix operator fun get(configFile: String): Configure2 =
+        get(configFile, null, saveToCache = true, useCacheIfPossible = true)
 
     /**
      * 检查这个资源文件是否存在，如果不存在就从指定的模板复制一份
      * @param targetFile 要检查的配置文件路径
      * @param templateFile 模板配置文件路径
+     * @param overrideExist 如果文件已经存在是否覆盖
      * @return 如果文件之前存在就返回true，如果现在新创建就返回false
      * @throws IOException 文件读写出错
      */
     @Throws(IOException::class)
-    fun touchOrCopyTemplate(targetFile: String, templateFile: String): Boolean {
+    fun touch(targetFile: String, templateFile: String, overrideExist: Boolean = false): Boolean {
         val file = File(plugin.dataFolder, targetFile)
         // 如果文件不存在
-        if (!file.exists()) {
+        if (overrideExist || !file.exists()) {
             // 检查父目录
-            if (!file.parentFile.exists()) {
-                file.parentFile.mkdirs()
-            }
+            if (!file.parentFile.exists()) file.parentFile.mkdirs()
 
             // 创建文件
             file.createNewFile()
@@ -524,22 +373,29 @@ class ConfigManager2
     }
 
     /**
-     * 获取某个配置文件(支持YAML,JSON,TOML,HOCON,XML,Properties和CSV)，如果不存在就加载默认
-     * @param configFile 配置文件路径
-     * @return 配置实例
+     * 检查这个资源文件是否存在，如果不存在就用模板来初始化
+     * @param targetFile 要检查的配置文件路径
+     * @param templateValue 模板，一个可序列化的类
+     * @param overrideExist 如果文件已经存在是否覆盖
+     * @return 如果文件之前存在就返回true，如果现在新创建就返回false
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    infix operator fun get(configFile: String): Configure2 {
-        // 已缓存则返回
-        return if (configCache.containsKey(configFile)) configCache[configFile]!!
-        // 读取配置文件
-        else getWithoutCache(configFile)
+    fun touch(targetFile: String, templateValue: Any, type: ConfigFileType? = null, overrideExist: Boolean = false): Boolean {
+        val file = File(plugin.dataFolder, targetFile)
+        // 如果文件不存在
+        if (overrideExist || !file.exists()) {
+            // 检查父目录
+            if (!file.parentFile.exists()) file.parentFile.mkdirs()
+            save(templateValue, file, type)
+            return false
+        }
+        return true
     }
 
     /**
-     * 直接从文件获取某个配置文件(支持YAML,JSON,TOML,HOCON,XML,Properties和CSV)，不使用缓存机制
+     * 从文件获取某个配置文件(支持YAML,JSON,TOML,HOCON,XML,Properties和CSV)
      * @param configFile 配置文件路径
      * @param type 配置文件类型，如果为null则自动检测
      * @return 配置实例
@@ -547,13 +403,26 @@ class ConfigManager2
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun getWithoutCache(configFile: String, type: ConfigFileType? = null): Configure2 {
-        // 未缓存则加载
-        touch(configFile)
-        // 读取配置文件
+    fun get(configFile: String,
+            type: ConfigFileType? = null,
+            templateFile: String = configFile,
+            saveToCache: Boolean = true,
+            useCacheIfPossible: Boolean = true,
+            templateData: Any? = null): Configure2 {
+        // 查找缓存
         val path = File(plugin.dataFolder, configFile)
+        val cacheKey = Pair(path.canonicalPath, configure2TypeReferenceString)
+        if (useCacheIfPossible) {
+            val cached = cache?.get(cacheKey)
+            if (cached != null) return cached as Configure2
+        }
+        // 未缓存则加载
+        if (templateData != null) touch(configFile, templateData, type) else touch(configFile, templateFile)
+        // 读取配置文件
         val typeReal = type ?: guessConfigType(path)
-        return Configure2(path, typeReal, mapper[typeReal].readTree(path) as ObjectNode, this)
+        val config = Configure2(path, configFile, saveToCache, typeReal, mapper[typeReal].readTree(path) as ObjectNode, this)
+        if (saveToCache) cache?.set(cacheKey, config)
+        return config
     }
 
     /**
@@ -565,12 +434,26 @@ class ConfigManager2
      * @return [T] 实例
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    inline fun <reified T> parse(configFile: String, type: ConfigFileType? = null): T {
-        // 未缓存则加载
+    inline fun <reified T : Any> parse(configFile: String,
+                                       type: ConfigFileType? = null,
+                                       saveToCache: Boolean = true,
+                                       useCacheIfPossible: Boolean = true): T {
+        // 查找缓存
+        val typeR = object : TypeReference<T>() {}
+        val path = File(plugin.dataFolder, configFile)
+        val cacheKey = Pair(path.canonicalPath, typeR.type.toString())
+        if (useCacheIfPossible) {
+            val cached = cache?.get(cacheKey)
+            if (cached != null) return cached as T
+        }
+        /// 未缓存则加载
+        if (typeR == configure2TypeReference) return get(configFile, type, saveToCache=saveToCache, useCacheIfPossible=false) as T
         touch(configFile)
-        // 读取配置文件
-        return parse(File(plugin.dataFolder, configFile), type)
+        val obj = mapper[type ?: guessConfigType(path)].readValue(path, typeR)
+        if (saveToCache) cache?.set(cacheKey, obj)
+        return obj as T
     }
+
 
     /**
      * 序列化对象到指定的配置文件
@@ -582,62 +465,84 @@ class ConfigManager2
      * @return [T] 实例
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun <T> save(obj: T, configFile: String, type: ConfigFileType? = null) {
-        // 读取配置文件
-        save(obj, File(plugin.dataFolder, configFile), type)
-    }
+    inline fun <reified T : Any> save(obj: T,
+                                      configFile: String,
+                                      type: ConfigFileType? = null,
+                                      saveToCache: Boolean = true) =
+        save(obj, File(plugin.dataFolder, configFile), type, saveToCache)
+
 
     /**
-     * 获取某个配置文件(支持YAML,JSON和HOCON)，如果不存在就从指定的模板复制一份
-     * @param targetFile 要获取的配置文件路径
-     * @param templateFile 模板配置文件路径
-     * @return 配置实例
-     * @throws IOException 文件读写出错
-     * @throws UnknownConfigFileFormatException 未知的配置文件格式
+     * 序列化对象到指定的配置文件
+     *
+     * @param T 指定类型
+     * @param obj 对象实例
+     * @param path 配置文件路径
+     * @param type 配置文件类型，如果为null则自动检测
+     * @return [T] 实例
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun getOrCopyTemplate(targetFile: String, templateFile: String, withoutCache: Boolean = false): Configure2 {
-        // 未缓存则加载
-        touchOrCopyTemplate(targetFile, templateFile)
-        return if (withoutCache && configCache.containsKey(targetFile)) configCache[targetFile]!!
-        else this[targetFile]
+    inline fun <reified T : Any> save(obj: T,
+                                      path: File,
+                                      type: ConfigFileType? = null,
+                                      saveToCache: Boolean = true) {
+        if (obj is Configure2) {
+            mapper[type ?: guessConfigType(path)].writeValue(path, obj.node)
+            if (saveToCache) this.cache?.also {
+                it[path.canonicalPath to configure2TypeReferenceString] = obj
+            }
+        } else {
+            ConfigManager2.save(obj, path, type)
+            if (saveToCache) this.cache?.also {
+                it[path.canonicalPath to object : TypeReference<T>() {}.type.toString()] = obj
+            }
+        }
     }
+
+
+    /**
+     * 从文件系统删除配置文件
+     * @param configFile 配置文件路径
+     * @param removeFromCache 是否从缓存中删除
+     */
+    fun remove(configFile: String, removeFromCache: Boolean = true) =
+        remove(File(plugin.dataFolder, configFile), removeFromCache)
+
+
+    /**
+     * 从文件系统删除配置文件
+     * @param path 配置文件路径
+     * @param removeFromCache 是否从缓存中删除
+     */
+    fun remove(path: File, removeFromCache: Boolean = true) {
+        if (removeFromCache && cache != null) {
+            val f = path.canonicalPath
+            cache!!.keys.filter { it.first == f }.forEach { cache!!.remove(it) }
+        }
+        path.delete()
+    }
+
 
     /**
      * 重置配置文件，恢复为默认配置文件
      * @param configFile 配置文件路径
      * @param templateFile 模板配置文件资源路径
+     * @param templateData 模板数据
+     * @param type 配置文件类型，如果为null则自动检测
      * @throws IOException 文件读写出错
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun reset(configFile: String, templateFile: String? = null) {
-        if (templateFile == null) plugin.saveResource(configFile, true)
-        else touchOrCopyTemplate(configFile, templateFile)
+    fun reset(configFile: String, templateFile: String = configFile, templateData: Any? = null, type: ConfigFileType? = null) {
+        if(templateData != null) touch(configFile, templateData) else touch(configFile, templateFile, type)
     }
 
-    /**
-     * 保存所有配置文件
-     */
-    fun saveAll() {
-        for (c : Configure2 in configCache.values) {
-            try {
-                c.save()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
 
     /**
      * 关闭、清理服务
      */
     override fun close() {
-        stopCleanService()
-        saveAll()
-        configCache.clear()
-        configTimestampMap.clear()
-        persistentConfigSet.clear()
+        cache?.clear()
     }
 
     /**
@@ -648,11 +553,25 @@ class ConfigManager2
      */
     fun parseText(text: String, type: ConfigFileType): Configure2 {
         val node = mapper[type].readTree(text) as ObjectNode
-        return Configure2(null, type, node, this)
+        return Configure2(null, null, false, type, node, this)
     }
 
     /**
      * 未知的配置文件格式异常
      */
     class UnknownConfigFileFormatException(fileName: String) : Exception("Unknown Config File Format: $fileName")
+
+    /**
+     * 支持的配置文件类型
+     */
+    enum class ConfigFileType {
+        Properties, Json, Yaml, Toml, Hocon, Xml, Csv
+    }
+
+    /**
+     * 缓存类型
+     */
+    enum class CacheType {
+        None, LRU, GreedyDualSize, Infinite
+    }
 }
