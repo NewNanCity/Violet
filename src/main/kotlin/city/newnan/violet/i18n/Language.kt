@@ -2,6 +2,7 @@ package city.newnan.violet.i18n
 
 import city.newnan.violet.config.ConfigManager2
 import com.fasterxml.jackson.databind.node.ObjectNode
+import org.bukkit.plugin.Plugin
 import java.io.File
 import java.io.IOException
 import java.util.*

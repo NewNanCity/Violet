@@ -382,13 +382,13 @@ class ConfigManager2
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun touch(targetFile: String, templateValue: Any, type: ConfigFileType? = null, overrideExist: Boolean = false): Boolean {
+    fun touch(targetFile: String, templateValue: () -> Any, type: ConfigFileType? = null, overrideExist: Boolean = false): Boolean {
         val file = File(plugin.dataFolder, targetFile)
         // 如果文件不存在
         if (overrideExist || !file.exists()) {
             // 检查父目录
             if (!file.parentFile.exists()) file.parentFile.mkdirs()
-            save(templateValue, file, type)
+            save(templateValue(), file, type)
             return false
         }
         return true
@@ -408,7 +408,7 @@ class ConfigManager2
             templateFile: String = configFile,
             saveToCache: Boolean = true,
             useCacheIfPossible: Boolean = true,
-            templateData: Any? = null): Configure2 {
+            templateData: (() -> Any)? = null): Configure2 {
         // 查找缓存
         val path = File(plugin.dataFolder, configFile)
         val cacheKey = Pair(path.canonicalPath, configure2TypeReferenceString)
@@ -533,8 +533,8 @@ class ConfigManager2
      * @throws UnknownConfigFileFormatException 未知的配置文件格式
      */
     @Throws(IOException::class, UnknownConfigFileFormatException::class)
-    fun reset(configFile: String, templateFile: String = configFile, templateData: Any? = null, type: ConfigFileType? = null) {
-        if(templateData != null) touch(configFile, templateData) else touch(configFile, templateFile, type)
+    fun reset(configFile: String, templateFile: String = configFile, templateData: (() -> Any)? = null, type: ConfigFileType? = null) {
+        if(templateData != null) touch(configFile, templateData, type, true) else touch(configFile, templateFile, true)
     }
 
 
