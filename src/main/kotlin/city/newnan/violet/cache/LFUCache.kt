@@ -1,10 +1,14 @@
 package city.newnan.violet.cache
 
 import java.util.*
+import kotlin.collections.HashMap
 
-class GreedyDualSizeCache<K, V>(override val capacity: Int) : Cache<K, V> {
-    private val cache = mutableMapOf<K, V>()
-    private val freq = mutableMapOf<K, Int>()
+/**
+ * LFU: Least Frequently Used Cache
+ */
+class LFUCache<K, V>(override val capacity: Int) : Cache<K, V> {
+    private val cache = HashMap<K, V>(capacity, 1.0f)
+    private val freq = HashMap<K, Int>(capacity, 1.0f)
     private val queue = PriorityQueue<Pair<K, Int>>(compareBy { it.second })
 
     override fun put(key: K, value: V): V? {

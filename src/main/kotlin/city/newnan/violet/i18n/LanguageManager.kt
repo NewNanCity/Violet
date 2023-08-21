@@ -1,5 +1,6 @@
 package city.newnan.violet.i18n
 
+import city.newnan.violet.config.ConfigManager2
 import city.newnan.violet.config.ConfigManager2.UnknownConfigFileFormatException
 import city.newnan.violet.message.LanguageProvider
 import me.lucko.helper.terminable.Terminable
@@ -22,10 +23,10 @@ class LanguageManager(private val plugin: Plugin) : LanguageProvider, Terminable
     private val languageMap: MutableMap<Locale, Language> = HashMap()
 
     @Throws(FileNotFoundException::class, IOException::class, UnknownConfigFileFormatException::class)
-    fun register(locale: Locale, filePath: String): LanguageManager {
+    fun register(locale: Locale, filePath: String, type: ConfigManager2.ConfigFileType? = null): LanguageManager {
         val file = File(plugin.dataFolder, filePath)
         if (file.exists() || file.isFile) {
-            languageMap[locale] = Language(file, locale)
+            languageMap[locale] = Language(locale, file, type)
         } else {
             throw FileNotFoundException(filePath)
         }

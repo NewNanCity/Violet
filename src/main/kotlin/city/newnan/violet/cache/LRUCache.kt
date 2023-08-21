@@ -1,7 +1,10 @@
 package city.newnan.violet.cache
 
+/**
+ * LRU: Least Recently Used Cache
+ */
 class LRUCache<K, V>(override val capacity: Int) :
-    LinkedHashMap<K, V>(capacity, 0.75f, true), Cache<K, V> {
+    LinkedHashMap<K, V>(capacity, 1.0f, true), Cache<K, V> {
     override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean {
         return size > capacity
     }

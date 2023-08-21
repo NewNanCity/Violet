@@ -19,36 +19,13 @@ class MessageManager(private val plugin: Plugin) : Terminable {
     init { if (plugin is TerminableConsumer) bindWith(plugin) }
 
     private var languageProvider: LanguageProvider? = null
-    internal var playerPrefixString = ""
-    internal val consolePrefixString: String = "[${plugin.description.name}] "
+    private var playerPrefixString = ""
+    private val consolePrefixString: String = "[${plugin.description.name}] "
 
     /**
      * 调试模式，默认为`false`
      */
     var debugMode: Boolean = false
-
-    /**
-     * 获取用户的下一个聊天框输入
-     * @param player 要获取输入的玩家
-     * @param block 获取到输入后的回调函数，返回`true`或`null`(不返回)则结束获取输入，返回`false`则继续获取输入并处理
-     */
-    fun gets(player: Player, block: (String) -> Boolean?) {
-        var done = false
-        Events.subscribe(AsyncPlayerChatEvent::class.java, EventPriority.HIGHEST)
-            .expireIf { done }
-            .filter { it.player == player && !it.isCancelled }
-            .handler {
-                it.isCancelled = true
-                try { done = block(it.message) ?: true }
-                catch (e: Exception) {
-                    e.printStackTrace()
-                    player.sendMessage("§cInternal Server Error!")
-                }
-            }
-            .also {
-                if (plugin is TerminableConsumer) it.bindWith(plugin)
-            }
-    }
 
     /**
      * 设置向玩家输出信息时的前缀
@@ -123,7 +100,8 @@ class MessageManager(private val plugin: Plugin) : Terminable {
             formatTextShadow = languageProvider!!.provideLanguage(formatTextShadow)!!
         }
         // 数据格式化
-        formatTextShadow = MessageFormat.format(formatTextShadow, *params)
+        formatTextShadow = if (params.isEmpty()) formatTextShadow else
+            MessageFormat.format(formatTextShadow, *params)
         if (color) {
             formatTextShadow = ChatColor.translateAlternateColorCodes('&', formatTextShadow)
         }
@@ -146,20 +124,17 @@ class MessageManager(private val plugin: Plugin) : Terminable {
             formatTextShadow = languageProvider!!.provideLanguage(formatTextShadow)!!
         }
         // 数据格式化
-        formatTextShadow = MessageFormat.format(formatTextShadow, *params)
+        formatTextShadow = if (params.isEmpty()) formatTextShadow else
+            MessageFormat.format(formatTextShadow, *params)
         // 分对象输出
         if (sendTo == null || sendTo is ConsoleCommandSender) {
             // 前缀添加
-            if (prefix) {
-                formatTextShadow = consolePrefixString + formatTextShadow
-            }
+            if (prefix) formatTextShadow = consolePrefixString + formatTextShadow
             // 样式码转换+输出
             consoleLogger.info(ChatColor.translateAlternateColorCodes('&', formatTextShadow))
         } else {
             // 前缀添加
-            if (prefix) {
-                formatTextShadow = playerPrefixString + formatTextShadow
-            }
+            if (prefix) formatTextShadow = playerPrefixString + formatTextShadow
             sendTo.sendMessage(ChatColor.translateAlternateColorCodes('&', formatTextShadow))
         }
         return this

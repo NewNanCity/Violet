@@ -3,7 +3,7 @@
 package city.newnan.violet.config
 
 import city.newnan.violet.cache.Cache
-import city.newnan.violet.cache.GreedyDualSizeCache
+import city.newnan.violet.cache.LFUCache
 import city.newnan.violet.cache.InfiniteCache
 import city.newnan.violet.cache.LRUCache
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -305,7 +305,7 @@ class ConfigManager2
         cache = when (type) {
             CacheType.None -> null
             CacheType.LRU -> LRUCache(capacity)
-            CacheType.GreedyDualSize -> GreedyDualSizeCache(capacity)
+            CacheType.LFU -> LFUCache(capacity)
             CacheType.Infinite -> InfiniteCache(capacity)
         }
     }
@@ -572,6 +572,6 @@ class ConfigManager2
      * 缓存类型
      */
     enum class CacheType {
-        None, LRU, GreedyDualSize, Infinite
+        None, LRU, LFU, Infinite
     }
 }

@@ -2,19 +2,18 @@ package city.newnan.violet.i18n
 
 import city.newnan.violet.config.ConfigManager2
 import com.fasterxml.jackson.databind.node.ObjectNode
-import org.bukkit.plugin.Plugin
 import java.io.File
 import java.io.IOException
 import java.util.*
-import javax.annotation.Nonnull
 
 
-class Language(private val languageFile: File, @get:Nonnull val language: Locale) {
+class Language(val language: Locale, private val getObjectNode: () -> ObjectNode) {
     private val languageNodes = mutableMapOf<String, String>()
 
-    init {
-        reload()
-    }
+    constructor(language: Locale, languageFile: File, type: ConfigManager2.ConfigFileType? = null)
+        : this(language, { ConfigManager2.parse<ObjectNode>(languageFile, type) })
+
+    init { reload() }
 
     @Throws(IOException::class, ConfigManager2.UnknownConfigFileFormatException::class)
     fun reload() {
@@ -29,7 +28,7 @@ class Language(private val languageFile: File, @get:Nonnull val language: Locale
                 }
             }
         }
-        visit(ConfigManager2.mapper[ConfigManager2.ConfigFileType.Json].readTree(languageFile) as ObjectNode)
+        visit(getObjectNode())
     }
 
     fun getNodeString(path: String): String? {

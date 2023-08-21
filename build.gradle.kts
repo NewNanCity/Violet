@@ -9,7 +9,7 @@ idea {
 
 val targetJavaVersion = 8
 
-version = "2.1.1"
+version = "2.1.2"
 group = "city.newnan.violet"
 description = "Useful toolkits java library for Bukkit Server Plugin."
 
@@ -24,52 +24,41 @@ repositories {
     maven("https://repo.lucko.me/")
     maven("https://libraries.minecraft.net/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    maven("https://repo.songoda.com/repository/public/")
     mavenCentral()
 }
 
 dependencies {
-    // Minecraft
-    compileOnly("org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT")
-    // Utils
-    compileOnly("me.lucko:helper:5.6.13")
-    // Database
-    compileOnly("mysql:mysql-connector-java:8.0.33")
-    compileOnly("com.zaxxer:HikariCP:4.0.3")
-    compileOnly("org.ktorm:ktorm-core:3.6.0")
-    // Network
-    compileOnly("com.squareup.okhttp3:okhttp:4.11.0")
-    // ConfigureFile
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
-    compileOnly("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
-    compileOnly("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
-    compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    listOf(
+        // Minecraft
+        "org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT",
+        // Utils
+        "me.lucko:helper:5.6.13",
+        // Gui
+        "dev.triumphteam:triumph-gui:3.1.2",
+        // Database
+        "mysql:mysql-connector-java:8.0.33",
+        "com.zaxxer:HikariCP:4.0.3",
+        "org.ktorm:ktorm-core:3.6.0",
+        // Network
+        "com.squareup.okhttp3:okhttp:4.11.0",
+        // ConfigureFile
+        // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+        "com.fasterxml.jackson.core:jackson-databind:2.15.2",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2",
+        "com.jasonclawson:jackson-dataformat-hocon:1.1.0",
+        "com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2",
+    ).forEach {
+        compileOnly(it);
+        testImplementation(it)
+    }
     // Test
     testImplementation(kotlin("test"))
-    // Minecraft
-    testImplementation("org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT")
-    // Utils
-    testImplementation("me.lucko:helper:5.6.13")
-    // Database
-    testImplementation("mysql:mysql-connector-java:8.0.33")
-    testImplementation("com.zaxxer:HikariCP:4.0.3")
-    testImplementation("org.ktorm:ktorm-core:3.6.0")
-    // Network
-    testImplementation("com.squareup.okhttp3:okhttp:4.11.0")
-    // ConfigureFile
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.15.2")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.2")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2")
-    testImplementation("com.jasonclawson:jackson-dataformat-hocon:1.1.0")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    compileOnly("org.spigotmc:spigot:1.16.5")
 }
 
 tasks.test { useJUnitPlatform() }

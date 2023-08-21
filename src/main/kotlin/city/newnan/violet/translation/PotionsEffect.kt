@@ -1,0 +1,38 @@
+package city.newnan.violet.translation
+
+import org.bukkit.potion.PotionEffectType
+
+val potionEffectTranslation = mapOf(
+    PotionEffectType.ABSORPTION          to "伤害吸收",
+    PotionEffectType.BAD_OMEN            to "不祥之兆",
+    PotionEffectType.BLINDNESS           to "失明",
+    PotionEffectType.CONDUIT_POWER       to "潮涌能量",
+    PotionEffectType.CONFUSION           to "反胃",
+    PotionEffectType.DAMAGE_RESISTANCE   to "抗性提升",
+    PotionEffectType.DOLPHINS_GRACE      to "海豚的恩惠",
+    PotionEffectType.FAST_DIGGING        to "急迫",
+    PotionEffectType.FIRE_RESISTANCE     to "防火",
+    PotionEffectType.GLOWING             to "发光",
+    PotionEffectType.HARM                to "伤害",
+    PotionEffectType.HEAL                to "治愈",
+    PotionEffectType.HEALTH_BOOST        to "生命提升",
+    PotionEffectType.HERO_OF_THE_VILLAGE to "村庄英雄",
+    PotionEffectType.HUNGER              to "饥饿",
+    PotionEffectType.INCREASE_DAMAGE     to "力量",
+    PotionEffectType.INVISIBILITY        to "隐身",
+    PotionEffectType.JUMP                to "跳跃",
+    PotionEffectType.LEVITATION          to "飘浮",
+    PotionEffectType.LUCK                to "幸运",
+    PotionEffectType.NIGHT_VISION        to "夜视",
+    PotionEffectType.POISON              to "中毒",
+    PotionEffectType.REGENERATION        to "生命恢复",
+    PotionEffectType.SATURATION          to "饱和",
+    PotionEffectType.SLOW                to "缓慢",
+    PotionEffectType.SLOW_DIGGING        to "挖掘疲劳",
+    PotionEffectType.SLOW_FALLING        to "缓降",
+    PotionEffectType.SPEED               to "速度",
+    PotionEffectType.UNLUCK              to "霉运",
+    PotionEffectType.WATER_BREATHING     to "水下呼吸",
+    PotionEffectType.WEAKNESS            to "虚弱",
+    PotionEffectType.WITHER              to "凋零",
+)
