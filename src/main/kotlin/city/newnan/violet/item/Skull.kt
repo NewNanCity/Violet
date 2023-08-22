@@ -1,6 +1,8 @@
 package city.newnan.violet.item
 
-import org.bukkit.Bukkit
+import city.newnan.violet.Reflection
+import com.mojang.authlib.GameProfile
+import com.mojang.authlib.properties.Property
 import org.bukkit.Material
 import org.bukkit.OfflinePlayer
 import org.bukkit.inventory.ItemStack
@@ -21,14 +23,14 @@ fun OfflinePlayer.getSkull(amount: Int = 1): ItemStack =
  * @return 一个拥有材质的头颅
  * @throws Exception 任何异常
  */
-fun URL.getSkull(amount: Int): ItemStack {
-    // 创建一个头
+fun URL.toSkull(amount: Int = 1): ItemStack {
     val item = ItemStack(Material.PLAYER_HEAD, amount)
     item.itemMeta = (item.itemMeta as SkullMeta).also {
-        // 创建一个随机的UUID虚拟玩家，并赋予对应的材质
-        it.ownerProfile = Bukkit.getServer().createPlayerProfile(UUID.randomUUID(), null).also { profile ->
-            profile.textures.skin = this
-        }
+        val profile = GameProfile(UUID.randomUUID(), null)
+        profile.properties.put("textures", Property("textures",
+            Base64.getEncoder().encodeToString("{textures:{SKIN:{url:\"$this\"}}}".toByteArray()))
+        )
+        Reflection.getDeclaredField(it.javaClass, "profile")?.set(it, profile)
     }
     return item
 }
@@ -38,6 +40,6 @@ fun URL.getSkull(amount: Int): ItemStack {
  * @return 一个拥有材质的头颅
  * @throws Exception 任何异常
  */
-fun String.getSkull(amount: Int): ItemStack =
+fun String.toSkull(amount: Int = 1): ItemStack =
     URL(if (!startsWith("http://") && !startsWith("https://"))
-        "http://textures.minecraft.net/texture/$this" else this).getSkull(amount)
+        "http://textures.minecraft.net/texture/$this" else this).toSkull(amount)

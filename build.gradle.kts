@@ -25,6 +25,7 @@ repositories {
     maven("https://libraries.minecraft.net/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://repo.songoda.com/repository/public/")
+    maven("https://nexus.velocitypowered.com/repository/maven-public/")
     mavenCentral()
 }
 
@@ -52,13 +53,13 @@ dependencies {
         "com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.15.2",
         "com.jasonclawson:jackson-dataformat-hocon:1.1.0",
         "com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2",
+        "com.mojang:authlib:1.5.26",
     ).forEach {
         compileOnly(it);
         testImplementation(it)
     }
     // Test
     testImplementation(kotlin("test"))
-    compileOnly("org.spigotmc:spigot:1.16.5")
 }
 
 tasks.test { useJUnitPlatform() }
