@@ -9,7 +9,7 @@ idea {
 
 val targetJavaVersion = 8
 
-version = "2.1.3"
+version = "2.1.4"
 group = "city.newnan.violet"
 description = "Useful toolkits java library for Bukkit Server Plugin."
 

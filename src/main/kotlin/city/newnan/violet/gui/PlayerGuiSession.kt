@@ -51,6 +51,7 @@ class PlayerGuiSession(val player: Player) {
             val (gui, _, close) = history.removeLastOrNull() ?: return
             close?.invoke(CloseType.Back, gui, this)
             if (history.isEmpty()) gui.close(player)
+            if (!show && i == step) gui.close(player)
         }
         history.lastOrNull()?.also { (gui, update, _) ->
             Schedulers.sync().run {
@@ -61,7 +62,7 @@ class PlayerGuiSession(val player: Player) {
     }
 
     @Synchronized
-    fun refresh(show: Boolean = true) {
+    fun refresh() {
         if (!player.isOnline) {
             clear()
             return
@@ -69,7 +70,7 @@ class PlayerGuiSession(val player: Player) {
         history.lastOrNull()?.also { (gui, update, _) ->
             Schedulers.sync().run {
                 if (update?.invoke(UpdateType.Refresh, gui, this) == true) gui.update()
-                if (show) gui.open(player)
+                gui.open(player)
             }
         }
     }
