@@ -70,7 +70,6 @@ class PlayerGuiSession(val player: Player) {
         history.lastOrNull()?.also { (gui, update, _) ->
             Schedulers.sync().run {
                 if (update?.invoke(UpdateType.Refresh, gui, this) == true) gui.update()
-                gui.open(player)
             }
         }
     }
