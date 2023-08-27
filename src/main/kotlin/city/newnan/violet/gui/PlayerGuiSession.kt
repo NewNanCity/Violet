@@ -6,7 +6,7 @@ import org.bukkit.entity.Player
 
 class PlayerGuiSession(val player: Player) {
     var chatInputHandlers: ((input: String) -> Boolean)? = null
-    val history = ArrayDeque<Triple<BaseGui, UpdateHandler<BaseGui>?, CloseHandler<BaseGui>?>>()
+    var history = ArrayDeque<Triple<BaseGui, UpdateHandler<BaseGui>?, CloseHandler<BaseGui>?>>()
     val length
         get() = history.size
 
@@ -100,15 +100,26 @@ class PlayerGuiSession(val player: Player) {
         }
     }
 
+    @Synchronized
     fun clear() {
-        current?.inventory?.viewers?.forEach { viewer ->
-            viewer.closeInventory()
-        }
-        while (history.isNotEmpty()) {
-            val (gui, _, close) = history.removeLast()
-            close?.invoke(CloseType.Hide, gui, this)
-        }
+        val oldHistory = history
+        history = ArrayDeque()
         chatInputHandlers = null
+        try {
+            oldHistory.lastOrNull()?.first?.inventory?.viewers?.forEach { viewer ->
+                viewer.closeInventory()
+            }
+            while (oldHistory.isNotEmpty()) {
+                val (gui, _, close) = oldHistory.removeLast()
+                try {
+                    close?.invoke(CloseType.Hide, gui, this)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**
